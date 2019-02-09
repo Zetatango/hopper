@@ -8,5 +8,5 @@ gemspec
 
 group :test, :development do
   gem 'bunny-mock', git: 'https://github.com/arempe93/bunny-mock'
-  gem 'token_validator', git: 'git@github.com:/Zetatango/auth-token-validator.git'
+  gem 'token_validator', github: 'Zetatango/token_validator'
 end
