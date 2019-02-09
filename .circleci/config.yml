@@ -1,0 +1,46 @@
+version: 2
+jobs:
+  build:
+    parallelism: 2
+    working_directory: ~/hopper
+    environment:
+      - CODECOV_TOKEN: 596bf195-c27f-4c4f-9838-0ba0fdee010d
+    docker:
+      - image: circleci/ruby:2.3.6-node
+
+    steps:
+      - checkout
+
+      - run:
+          name: Bundle Install
+          command: bundle install
+
+      - run:
+          name: Run rubocop
+          command: |
+            bundle exec rubocop --out test_results/rubocop.txt --format fuubar --require rubocop-rspec --config .rubocop.yml
+
+      - run:
+          name: Run bundle-audit
+          command: |
+            bundle exec bundle-audit check --update
+
+      - run:
+          name: Run rspec tests
+          command: |
+            bundle exec rspec \
+              --profile 10 \
+              --format RspecJunitFormatter \
+              --out test_results/rspec.xml \
+              --format progress
+
+      - store_test_results:
+          path: test_results
+
+      - store_artifacts:
+          path: test_results
+          prefix: tests
+
+      - store_artifacts:
+          path: coverage
+          prefix: coverage
