@@ -143,8 +143,9 @@ RSpec.describe Hopper do
       end
 
       it 'as nil if source is not provided' do
+        allow(subscriber).to receive(:handle_object_created)
         described_class.publish(message.to_json.to_s, routing_key)
-        expect(subscriber.source).to be_nil
+        expect(subscriber).to have_received(:handle_object_created).with(message, nil)
       end
 
       it 'receive source object' do
