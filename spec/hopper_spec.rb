@@ -68,15 +68,9 @@ RSpec.describe Hopper do
       Class.new do
         include Hopper::Subscriber
 
-        class << self
-          attr_reader :event, :source
-        end
         subscribe "object.created", :handle_object_created
 
-        def self.handle_object_created(event, source)
-          @event = event
-          @source = source
-        end
+        def self.handle_object_created(_event, _source); end
       end
     end
 
@@ -88,13 +82,13 @@ RSpec.describe Hopper do
     end
 
     it 'will bound queue to exchange using the routing key' do
-      is_bound = described_class.queue.bound_to?(described_class.exchange, routing_key: routing_key)
-      expect(is_bound).to be_truthy
+      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key)
     end
 
     it 'will call subscribers methods if the topic matches' do
+      allow(subscriber).to receive(:handle_object_created)
       described_class.publish(message.to_json.to_s, routing_key)
-      expect(subscriber.event).to eq(message)
+      expect(subscriber).to have_received(:handle_object_created).with(message, nil)
       expect(described_class.queue.message_count).to be_zero
     end
 
@@ -154,17 +148,19 @@ RSpec.describe Hopper do
       end
 
       it 'receive source object' do
+        allow(subscriber).to receive(:handle_object_created)
         stub_request(:get, source_path)
           .to_return(status: 200, body: object.to_json.to_s)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber.source).to eq(object)
+        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, object)
       end
 
       it 're-queue the message if the get fails' do
+        allow(subscriber).to receive(:handle_object_created)
         stub_request(:get, source_path).to_timeout.times(1).then
                                        .to_return(status: 200, body: object.to_json.to_s)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber.source).to eq(object)
+        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, object)
       end
     end
   end
