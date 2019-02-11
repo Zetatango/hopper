@@ -134,7 +134,13 @@ RSpec.describe Hopper do
 
       before do
         service.clear
-        TokenValidator::ValidatorConfig.configure(roadrunner_url: roadrunner_url, zetatango_url: zetatango_url)
+        TokenValidator::ValidatorConfig.configure(
+          client_id: '123',
+          client_secret: '123',
+          requested_scope: '123',
+          issuer_url: roadrunner_url,
+          audience: 'audience'
+        )
         stub_request(:post, "#{roadrunner_url}/oauth/token")
           .to_return(status: 200, body:
             '{"access_token":"abc123","token_type":"bearer",' \
