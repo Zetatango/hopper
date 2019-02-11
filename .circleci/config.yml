@@ -3,8 +3,6 @@ jobs:
   build:
     parallelism: 2
     working_directory: ~/hopper
-    environment:
-      - CODECOV_TOKEN: ae4725f0-0117-4707-bc6a-b442b24131cb
     docker:
       - image: circleci/ruby:2.5.3
 
