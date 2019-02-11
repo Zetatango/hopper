@@ -14,5 +14,4 @@ gemspec
 group :test, :development do
   gem 'bunny-mock', git: 'https://github.com/arempe93/bunny-mock'
   gem 'token_validator', github: 'Zetatango/token_validator'
-  gem 'brakeman', git: 'https://github.com/Zetatango/brakeman.git'
 end
