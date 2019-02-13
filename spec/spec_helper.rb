@@ -1,5 +1,27 @@
-require "bundler/setup"
-require "hopper"
+# frozen_string_literal: true
+
+if ENV['COVERAGE'] || ENV['CI']
+  require 'simplecov'
+  require 'codecov'
+
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
+    [
+      SimpleCov::Formatter::Codecov,
+      SimpleCov::Formatter::HTMLFormatter
+    ]
+  )
+
+  SimpleCov.start do
+    add_group 'LIB', %w[lib spec]
+  end
+end
+
+require 'bundler/setup'
+require 'webmock/rspec'
+require 'bunny-mock'
+require 'hopper'
+
+Dir[File.join(Dir.pwd, 'lib', 'hopper.rb')].sort.each { |file| require file }
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

@@ -1,31 +1,28 @@
-
 # frozen_string_literal: true
 
-module Hopper::ApiRequest
-  def initialize(method, path, payload = nil)
-    @method = method
-    @payload = payload
-    @path = path
-  end
+require 'rest-client'
+require 'token_validator'
 
-  private
+class Hopper::ApiRequest
+  include Singleton
 
-  def execute
+  def execute(method, path, payload = nil)
     RestClient::Request.execute(
-      method: @method,
-      url: @path,
+      method: method,
+      url: path,
       headers: { Authorization: "Bearer #{access_token}" },
-      payload: @payload
+      payload: payload
     ) do |response, _request, result|
-      raise Hopper::ApiException, "Error response from api #{@method}:#{@path}: #{result}" unless result.code == '200'
-      JSON.parse(response.to_s)
+      raise Hopper::ApiException, "Error response from api #{method}:#{path}: #{result}" unless result.code == '200'
+
+      JSON.parse(response.to_s, symbolize_names: true)
     end
-  rescue StandardError => e
-    raise Hopper::ApiException, "Exception raised while calling api #{@method}:#{@path}: #{e.message}"
+  rescue RestClient::Exception => e
+    raise Hopper::HopperRetriableError, "Exception raised while calling api #{method}:#{path}: #{e.message}"
   end
 
   def access_token
-    oauth_token_service = "TokenValidator::OauthTokenService".constantize.instance
+    oauth_token_service = TokenValidator::OauthTokenService.instance
     @api_token = oauth_token_service.access_token[:token]
   end
 end
