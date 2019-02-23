@@ -2,7 +2,7 @@
 
 require 'hopper/version'
 require 'hopper/subscriber'
-require 'hopper/api_request'
+require 'hopper/lazy_source'
 require 'bunny'
 
 module Hopper
@@ -28,7 +28,8 @@ module Hopper
     end
 
     def publish(message, key)
-      @exchange.publish(message, message_options(key))
+      message = message.to_json if message.is_a? Hash
+      @exchange.publish(message.to_s, message_options(key))
     end
 
     def add_subscriber(subscriber)
@@ -46,7 +47,7 @@ module Hopper
 
     def handle_message(delivery_tag, routing_key, message)
       message_data = JSON.parse(message, symbolize_names: true)
-      source_object = Hopper::ApiRequest.instance.execute('GET', message_data[:source]) unless message_data[:source].nil?
+      source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
       @subscribers.each do |subscriber|
         subscriber.class.send(subscriber.method, message_data, source_object) if subscriber.routing_key == routing_key
       end
