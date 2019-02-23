@@ -79,6 +79,7 @@ RSpec.describe Hopper do
 
     before do
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
+      described_class.reset_subscribers
       described_class.init_channel(config)
       subscriber
       described_class.start_listening

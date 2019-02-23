@@ -43,6 +43,10 @@ module Hopper
       end
     end
 
+    def reset_subscribers
+      @subscribers = []
+    end
+
     private
 
     def handle_message(delivery_tag, routing_key, message)
@@ -70,7 +74,7 @@ module Hopper
     end
 
     def bind_subscribers
-      subscribers.each { |subscriber| @queue.bind(@exchange, routing_key: subscriber.routing_key)}
+      subscribers.each { |subscriber| @queue.bind(@exchange, routing_key: subscriber.routing_key) }
     end
 
     def subscribers
