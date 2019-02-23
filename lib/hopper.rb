@@ -23,7 +23,7 @@ module Hopper
       @channel = connection.create_channel
       @exchange = @channel.topic(config[:exchange], durable: true)
       @queue = @channel.queue(config[:queue], durable: true)
-      @subscribers = []
+      bind_subscribers
       @configured = true
     end
 
@@ -33,8 +33,8 @@ module Hopper
     end
 
     def add_subscriber(subscriber)
-      @queue.bind(@exchange, routing_key: subscriber.routing_key)
-      @subscribers << subscriber
+      @queue.bind(@exchange, routing_key: subscriber.routing_key) if @queue.present?
+      subscribers << subscriber
     end
 
     def start_listening
@@ -48,7 +48,7 @@ module Hopper
     def handle_message(delivery_tag, routing_key, message)
       message_data = JSON.parse(message, symbolize_names: true)
       source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
-      @subscribers.each do |subscriber|
+      subscribers.each do |subscriber|
         subscriber.class.send(subscriber.method, message_data, source_object) if subscriber.routing_key == routing_key
       end
       @channel.acknowledge(delivery_tag, false)
@@ -67,6 +67,14 @@ module Hopper
         mandatory: true,
         persistent: true
       }
+    end
+
+    def bind_subscribers
+      subscribers.each { |subscriber| @queue.bind(@exchange, routing_key: subscriber.routing_key)}
+    end
+
+    def subscribers
+      @subscribers ||= []
     end
   end
 end
