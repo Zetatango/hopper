@@ -12,6 +12,7 @@ class LazySource < ::BasicObject
     @__target_object__
   end
 
+  # rubocop disable is needed as the class is extending BasicObject (no respond_to_missing?, should not respond to super)
   # rubocop:disable Style/MethodMissingSuper, Style/MissingRespondToMissing
   def method_missing(method_name, *args, &block)
     __target_object__.send(method_name, *args, &block)

@@ -46,5 +46,20 @@ RSpec.describe LazySource do
       _source = described_class.new(source_url)
       expect(WebMock).to have_requested(:get, source_url).times(0)
     end
+
+    it 'will raise an api exception if the response status is not 200' do
+      stub_request(:get, source_url)
+        .to_return(status: 404, body: {}.to_json.to_s)
+      expect do
+        described_class.new(source_url).keys
+      end.to raise_exception(Hopper::ApiException)
+    end
+
+    it 'will raise an api exception if the http request fails' do
+      stub_request(:get, source_url).to_timeout
+      expect do
+        described_class.new(source_url).keys
+      end.to raise_exception(Hopper::HopperRetriableError)
+    end
   end
 end
