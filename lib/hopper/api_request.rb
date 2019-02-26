@@ -4,8 +4,6 @@ require 'rest-client'
 require 'token_validator'
 
 class Hopper::ApiRequest
-  include Singleton
-
   def execute(method, path, payload = nil)
     RestClient::Request.execute(
       method: method,

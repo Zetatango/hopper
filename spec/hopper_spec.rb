@@ -70,12 +70,16 @@ RSpec.describe Hopper do
 
         subscribe "object.created", :handle_object_created
 
-        def self.handle_object_created(_event, _source); end
+        def self.handle_object_created(_event, source)
+          # evaluate source
+          source.class
+        end
       end
     end
 
     before do
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
+      described_class.reset_subscribers
       described_class.init_channel(config)
       subscriber
       described_class.start_listening
@@ -122,10 +126,6 @@ RSpec.describe Hopper do
         'https://localhost:3002'
       end
 
-      let(:zetatango_url) do
-        'https://localhost:3000'
-      end
-
       before do
         service.clear
         TokenValidator::ValidatorConfig.configure(
@@ -148,20 +148,25 @@ RSpec.describe Hopper do
         expect(subscriber).to have_received(:handle_object_created).with(message, nil)
       end
 
-      it 'receive source object' do
+      it 'receives lazy source object and no calls are made if source is not evaluated' do
         allow(subscriber).to receive(:handle_object_created)
+        described_class.publish(message_with_data.to_json.to_s, routing_key)
+        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, any_args)
+      end
+
+      it 'receive real object if evaluated' do
+        allow(subscriber).to receive(:handle_object_created) { |args| args }
         stub_request(:get, source_path)
           .to_return(status: 200, body: object.to_json.to_s)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, object)
+        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, hash_including(id: 123))
       end
 
-      it 're-queue the message if the get fails' do
-        allow(subscriber).to receive(:handle_object_created)
+      it 're-queue the message if the get http request fails' do
         stub_request(:get, source_path).to_timeout.times(1).then
                                        .to_return(status: 200, body: object.to_json.to_s)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, object)
+        expect(WebMock).to have_requested(:get, source_path).times(2)
       end
     end
   end

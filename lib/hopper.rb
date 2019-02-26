@@ -2,7 +2,7 @@
 
 require 'hopper/version'
 require 'hopper/subscriber'
-require 'hopper/api_request'
+require 'hopper/lazy_source'
 require 'bunny'
 
 module Hopper
@@ -23,17 +23,18 @@ module Hopper
       @channel = connection.create_channel
       @exchange = @channel.topic(config[:exchange], durable: true)
       @queue = @channel.queue(config[:queue], durable: true)
-      @subscribers = []
+      bind_subscribers
       @configured = true
     end
 
     def publish(message, key)
-      @exchange.publish(message, message_options(key))
+      message = message.to_json if message.is_a? Hash
+      @exchange.publish(message.to_s, message_options(key))
     end
 
     def add_subscriber(subscriber)
-      @queue.bind(@exchange, routing_key: subscriber.routing_key)
-      @subscribers << subscriber
+      @queue.bind(@exchange, routing_key: subscriber.routing_key) if @queue.present?
+      subscribers << subscriber
     end
 
     def start_listening
@@ -42,12 +43,16 @@ module Hopper
       end
     end
 
+    def reset_subscribers
+      @subscribers = []
+    end
+
     private
 
     def handle_message(delivery_tag, routing_key, message)
       message_data = JSON.parse(message, symbolize_names: true)
-      source_object = Hopper::ApiRequest.instance.execute('GET', message_data[:source]) unless message_data[:source].nil?
-      @subscribers.each do |subscriber|
+      source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
+      subscribers.each do |subscriber|
         subscriber.class.send(subscriber.method, message_data, source_object) if subscriber.routing_key == routing_key
       end
       @channel.acknowledge(delivery_tag, false)
@@ -66,6 +71,14 @@ module Hopper
         mandatory: true,
         persistent: true
       }
+    end
+
+    def bind_subscribers
+      subscribers.each { |subscriber| @queue.bind(@exchange, routing_key: subscriber.routing_key) }
+    end
+
+    def subscribers
+      @subscribers ||= []
     end
   end
 end
