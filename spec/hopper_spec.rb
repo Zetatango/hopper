@@ -113,16 +113,16 @@ RSpec.describe Hopper do
       hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
                                                        method: :handle_second_object_created,
                                                        routing_key: "object.created")
-      expect(described_class.send(:subscribers).include? hopper_subscriber).to be false
+      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be false
 
       described_class.add_subscriber(hopper_subscriber)
 
-      expect(described_class.send(:subscribers).include? hopper_subscriber).to be true
+      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be true
     end
 
     it 'will not push subscriber to the list if it\'s already added' do
-      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber, 
-                                                       method: :handle_second_object_created, 
+      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
+                                                       method: :handle_second_object_created,
                                                        routing_key: "object.created")
       expect(described_class.send(:subscribers).count(hopper_subscriber)).to eq(0)
 
