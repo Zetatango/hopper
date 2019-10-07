@@ -33,7 +33,7 @@ module Hopper
     end
 
     def add_subscriber(subscriber)
-      return if subscribers.include? subscriber
+      return if subscribers.include?(subscriber)
 
       @queue.bind(@exchange, routing_key: subscriber.routing_key) if @queue.present?
       subscribers << subscriber
