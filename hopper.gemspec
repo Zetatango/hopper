@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler-audit'
+  spec.add_development_dependency 'byebug'
   spec.add_development_dependency 'codecov'
   spec.add_development_dependency 'rspec-collection_matchers'
   spec.add_development_dependency 'rspec-mocks'
