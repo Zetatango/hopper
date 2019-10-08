@@ -17,6 +17,7 @@ if ENV['COVERAGE'] || ENV['CI']
 end
 
 require 'bundler/setup'
+require 'byebug'
 require 'webmock/rspec'
 require 'bunny-mock'
 require 'hopper'

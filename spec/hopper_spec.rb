@@ -109,6 +109,45 @@ RSpec.describe Hopper do
       expect(described_class.queue.message_count).to be_zero
     end
 
+    it 'will push subscriber to the list if it wasn\'t added before' do
+      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
+                                                       method: :handle_second_object_created,
+                                                       routing_key: "object.created")
+      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be false
+
+      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
+
+      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be true
+    end
+
+    it 'will push subscriber to the list when adding same method but different routing_key' do
+      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
+                                                       method: :handle_second_object_created,
+                                                       routing_key: "object.created")
+      # Adding subscriber for the first time
+      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
+
+      # Trying to add same subscriber a second time
+      hopper_subscriber2 = Hopper::SubscriberStruct.new(class: subscriber,
+                                                        method: :handle_second_object_created,
+                                                        routing_key: "object.updated")
+      expect { described_class.add_subscriber(hopper_subscriber2) }.to change { described_class.send(:subscribers).count }.by(1)
+    end
+
+    it 'will not push subscriber to the list if it\'s already added' do
+      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
+                                                       method: :handle_second_object_created,
+                                                       routing_key: "object.created")
+      # Adding subscriber for the first time
+      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
+
+      # Trying to add same subscriber a second time
+      hopper_subscriber2 = Hopper::SubscriberStruct.new(class: subscriber,
+                                                        method: :handle_second_object_created,
+                                                        routing_key: "object.created")
+      expect { described_class.add_subscriber(hopper_subscriber2) }.to change { described_class.send(:subscribers).count }.by(0)
+    end
+
     describe 'will receive source data' do
       let(:source_path) { 'http://localhost:3000/objects/123' }
       let(:object) { { id: 123 } }
