@@ -15,15 +15,13 @@ class Hopper::Configuration
     end
 
     def method_missing(method)
-      method = method.to_s.sub(/=$/, "").to_sym
-      return super unless @configuration.key?(method)
+      return super unless @configuration.key?(method.to_sym)
 
-      @configuration[method]
+      @configuration[method.to_sym]
     end
 
     def respond_to_missing?(method, _include_private = false)
-      method = method.to_s.sub(/=$/, "").to_sym
-      @configuration.key?(method)
+      @configuration.key?(method.to_sym)
     end
   end
 end
