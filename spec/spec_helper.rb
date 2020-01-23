@@ -21,6 +21,8 @@ require 'byebug'
 require 'webmock/rspec'
 require 'bunny-mock'
 require 'hopper'
+require "action_controller/railtie"
+require 'rspec/rails'
 
 Dir[File.join(Dir.pwd, 'lib', 'hopper.rb')].sort.each { |file| require file }
 

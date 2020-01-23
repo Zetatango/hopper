@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
 require 'hopper/version'
+require 'hopper/configuration'
 require 'hopper/subscriber'
 require 'hopper/lazy_source'
+require 'hopper/jobs/publish_retry_job'
 require 'bunny'
 
 module Hopper
@@ -24,12 +26,17 @@ module Hopper
       @exchange = @channel.topic(config[:exchange], durable: true)
       @queue = @channel.queue(config[:queue], durable: true)
       bind_subscribers
+      Hopper::Configuration.load(config)
       @configured = true
     end
 
     def publish(message, key)
       message = message.to_json if message.is_a? Hash
-      @exchange.publish(message.to_s, message_options(key))
+      options = message_options(key)
+      @exchange.publish(message.to_s, options)
+    rescue Bunny::ConnectionClosedError
+      Rails.logger.error("Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}") if Rails.logger.present?
+      Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
     end
 
     def add_subscriber(subscriber)

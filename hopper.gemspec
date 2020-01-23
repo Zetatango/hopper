@@ -29,18 +29,23 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
+  spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'bundler-audit'
+  spec.add_development_dependency 'bunny-mock'
   spec.add_development_dependency 'byebug'
   spec.add_development_dependency 'codecov'
+  spec.add_development_dependency 'rspec'
   spec.add_development_dependency 'rspec-collection_matchers'
   spec.add_development_dependency 'rspec-mocks'
+  spec.add_development_dependency 'rspec-rails'
   spec.add_development_dependency 'rspec_junit_formatter'
   spec.add_development_dependency 'rubocop'
   spec.add_development_dependency 'rubocop-rspec'
-  spec.add_development_dependency 'rubocop_runner', '~> 2.0'
+  spec.add_development_dependency 'rubocop_runner'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'timecop'
 
   spec.add_dependency 'bunny', '>= 2.13.0'
+  spec.add_dependency 'rails'
   spec.add_dependency 'rest-client'
 end
