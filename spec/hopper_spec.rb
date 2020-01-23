@@ -25,8 +25,8 @@ RSpec.describe Hopper do
 
   describe 'Hopper configuration' do
     let(:bunny_server) { BunnyMock.new }
-
     let(:connection) { bunny_server.start }
+    let(:extra_option_value) { 'value' }
 
     before do
       allow(Bunny).to receive(:new).and_return(bunny_server)
@@ -40,6 +40,46 @@ RSpec.describe Hopper do
 
     it 'setups new configured exchange' do
       expect(connection.find_exchange(exchange_name)).not_to be_nil
+    end
+
+    it 'initializes hopper configuration' do
+      described_class.init_channel(config.merge(extra_option: extra_option_value))
+      expect(Hopper::Configuration.extra_option).to eq(extra_option_value)
+    end
+  end
+
+  describe 'publish' do
+    let(:bunny_server) { BunnyMock.new }
+    let(:connection) { bunny_server.start }
+    let(:channel) { connection.create_channel }
+    let(:exchange) { channel.topic('test') }
+    let(:message) { 'Hello' }
+    let(:message_key) { 'message_key' }
+
+    before do
+      allow(Bunny).to receive(:new).and_return(bunny_server)
+      allow(bunny_server).to receive(:start).and_return(connection)
+      allow(connection).to receive(:create_channel).and_return(channel)
+      allow(channel).to receive(:topic).and_return(exchange)
+      allow(exchange).to receive(:publish)
+      described_class.init_channel(config)
+      ActiveJob::Base.queue_adapter = :test
+    end
+
+    it 'will publish the message on the channel' do
+      described_class.publish(message, message_key)
+      expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+    end
+
+    it 'will not trigger the retry job if the publish succeeds' do
+      described_class.publish(message, message_key)
+      expect(Hopper::PublishRetryJob).not_to have_been_enqueued
+    end
+
+    it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
+      allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
+      described_class.publish(message, message_key)
+      expect(Hopper::PublishRetryJob).to have_been_enqueued
     end
   end
 
