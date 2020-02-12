@@ -77,24 +77,46 @@ RSpec.describe Hopper do
       allow(connection).to receive(:create_channel).and_return(channel)
       allow(channel).to receive(:topic).and_return(exchange)
       allow(exchange).to receive(:publish)
-      described_class.init_channel(config)
       ActiveJob::Base.queue_adapter = :test
     end
 
-    it 'will publish the message on the channel' do
-      described_class.publish(message, message_key)
-      expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+    describe 'when not initialized' do
+      before do
+        described_class.instance_variable_set(:@configured, nil)
+        allow(Rails.logger).to receive(:info)
+      end
+
+      it 'will ignore events' do
+        described_class.publish(message, message_key)
+        expect(exchange).not_to have_received(:publish)
+      end
+
+      it 'will log request' do
+        described_class.publish(message, message_key)
+        expect(Rails.logger).to have_received(:info).with("Event #{message_key} not published as Hopper was not initialized in this environment")
+      end
     end
 
-    it 'will not trigger the retry job if the publish succeeds' do
-      described_class.publish(message, message_key)
-      expect(Hopper::PublishRetryJob).not_to have_been_enqueued
-    end
+    describe 'when initialized' do
+      before do
+        described_class.init_channel(config)
+      end
 
-    it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
-      allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
-      described_class.publish(message, message_key)
-      expect(Hopper::PublishRetryJob).to have_been_enqueued
+      it 'will publish the message on the channel' do
+        described_class.publish(message, message_key)
+        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+      end
+
+      it 'will not trigger the retry job if the publish succeeds' do
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).not_to have_been_enqueued
+      end
+
+      it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
+        allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).to have_been_enqueued
+      end
     end
   end
 

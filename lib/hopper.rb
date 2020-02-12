@@ -30,6 +30,11 @@ module Hopper
     end
 
     def publish(message, key)
+      unless @configured
+        Rails.logger.info("Event #{key} not published as Hopper was not initialized in this environment")
+        return
+      end
+
       message = message.to_json if message.is_a? Hash
       options = message_options(key)
       @exchange.publish(message.to_s, options)
