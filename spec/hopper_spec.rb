@@ -15,11 +15,26 @@ RSpec.describe Hopper do
   end
 
   describe 'Initialize hopper' do
-    it 'does not throw an exception' do
+    let(:routing_key1) { 'routing_key1' }
+    let(:routing_key2) { 'routing_key2' }
+
+    before do
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
+    end
+
+    it 'does not throw an exception' do
       expect do
         described_class.init_channel(config)
       end.not_to raise_exception
+    end
+
+    it 'binds queue to registered routing keys' do
+      described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
+
+      described_class.init_channel(config)
+
+      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key1)
+      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key2)
     end
   end
 
@@ -62,24 +77,46 @@ RSpec.describe Hopper do
       allow(connection).to receive(:create_channel).and_return(channel)
       allow(channel).to receive(:topic).and_return(exchange)
       allow(exchange).to receive(:publish)
-      described_class.init_channel(config)
       ActiveJob::Base.queue_adapter = :test
     end
 
-    it 'will publish the message on the channel' do
-      described_class.publish(message, message_key)
-      expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+    describe 'when not initialized' do
+      before do
+        described_class.instance_variable_set(:@configured, nil)
+        allow(Rails.logger).to receive(:info)
+      end
+
+      it 'will ignore events' do
+        described_class.publish(message, message_key)
+        expect(exchange).not_to have_received(:publish)
+      end
+
+      it 'will log request' do
+        described_class.publish(message, message_key)
+        expect(Rails.logger).to have_received(:info).with("Event #{message_key} not published as Hopper was not initialized in this environment")
+      end
     end
 
-    it 'will not trigger the retry job if the publish succeeds' do
-      described_class.publish(message, message_key)
-      expect(Hopper::PublishRetryJob).not_to have_been_enqueued
-    end
+    describe 'when initialized' do
+      before do
+        described_class.init_channel(config)
+      end
 
-    it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
-      allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
-      described_class.publish(message, message_key)
-      expect(Hopper::PublishRetryJob).to have_been_enqueued
+      it 'will publish the message on the channel' do
+        described_class.publish(message, message_key)
+        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+      end
+
+      it 'will not trigger the retry job if the publish succeeds' do
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).not_to have_been_enqueued
+      end
+
+      it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
+        allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).to have_been_enqueued
+      end
     end
   end
 
@@ -104,88 +141,72 @@ RSpec.describe Hopper do
 
     let(:routing_key) { 'object.created' }
 
-    let(:subscriber) do
+    let(:class_subscriber) do
       Class.new do
-        include Hopper::Subscriber
-
-        subscribe "object.created", :handle_object_created
-
-        def self.handle_object_created(_event, source)
+        def self.handle_object_created(_event_type, _event, source)
           # evaluate source
           source.class
         end
       end
     end
 
+    let(:instance_subscriber) do
+      subscriber_class = Class.new do
+        def handle_object_created(_event_type, _event, _source); end
+      end
+      instance_double(subscriber_class)
+    end
+
     before do
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
-      described_class.reset_subscribers
+      described_class.clear
       described_class.init_channel(config)
-      subscriber
       described_class.start_listening
     end
 
     it 'will bound queue to exchange using the routing key' do
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
       expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key)
     end
 
-    it 'will call subscribers methods if the topic matches' do
-      allow(subscriber).to receive(:handle_object_created)
+    it 'will call subscribers class methods if the topic matches' do
+      allow(class_subscriber).to receive(:handle_object_created)
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
       described_class.publish(message.to_json.to_s, routing_key)
-      expect(subscriber).to have_received(:handle_object_created).with(message, nil)
+
+      expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
+      expect(described_class.queue.message_count).to be_zero
+    end
+
+    it 'will call subscribers instance methods if the topic matches' do
+      allow(instance_subscriber).to receive(:handle_object_created)
+      described_class.subscribe(instance_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(message.to_json.to_s, routing_key)
+
+      expect(instance_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
       expect(described_class.queue.message_count).to be_zero
     end
 
     it 'will not call subscribers methods if the topic does not match' do
-      allow(subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperNonRetriableError)
+      allow(class_subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperNonRetriableError)
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
       described_class.publish(non_retriable_error_message.to_json.to_s, routing_key)
+
       expect(described_class.queue.message_count).to be_zero
     end
 
     it 'will re-queue message if handling fails with retriable error' do
-      allow(subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperRetriableError)
-      allow(subscriber).to receive(:handle_object_created).once
+      allow(class_subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperRetriableError)
+      allow(class_subscriber).to receive(:handle_object_created).once
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
       described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+
       expect(described_class.queue.message_count).to be_zero
-    end
-
-    it 'will push subscriber to the list if it wasn\'t added before' do
-      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
-                                                       method: :handle_second_object_created,
-                                                       routing_key: "object.created")
-      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be false
-
-      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
-
-      expect(described_class.send(:subscribers).include?(hopper_subscriber)).to be true
-    end
-
-    it 'will push subscriber to the list when adding same method but different routing_key' do
-      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
-                                                       method: :handle_second_object_created,
-                                                       routing_key: "object.created")
-      # Adding subscriber for the first time
-      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
-
-      # Trying to add same subscriber a second time
-      hopper_subscriber2 = Hopper::SubscriberStruct.new(class: subscriber,
-                                                        method: :handle_second_object_created,
-                                                        routing_key: "object.updated")
-      expect { described_class.add_subscriber(hopper_subscriber2) }.to change { described_class.send(:subscribers).count }.by(1)
-    end
-
-    it 'will not push subscriber to the list if it\'s already added' do
-      hopper_subscriber = Hopper::SubscriberStruct.new(class: subscriber,
-                                                       method: :handle_second_object_created,
-                                                       routing_key: "object.created")
-      # Adding subscriber for the first time
-      expect { described_class.add_subscriber(hopper_subscriber) }.to change { described_class.send(:subscribers).count }.by(1)
-
-      # Trying to add same subscriber a second time
-      hopper_subscriber2 = Hopper::SubscriberStruct.new(class: subscriber,
-                                                        method: :handle_second_object_created,
-                                                        routing_key: "object.created")
-      expect { described_class.add_subscriber(hopper_subscriber2) }.to change { described_class.send(:subscribers).count }.by(0)
     end
 
     describe 'will receive source data' do
@@ -219,26 +240,27 @@ RSpec.describe Hopper do
             '{"access_token":"abc123","token_type":"bearer",' \
             '"expires_in":7200,"refresh_token":"",' \
             '"scope":"idp:api"}')
+        described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
       end
 
       it 'as nil if source is not provided' do
-        allow(subscriber).to receive(:handle_object_created)
+        allow(class_subscriber).to receive(:handle_object_created)
         described_class.publish(message.to_json.to_s, routing_key)
-        expect(subscriber).to have_received(:handle_object_created).with(message, nil)
+        expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
       end
 
       it 'receives lazy source object and no calls are made if source is not evaluated' do
-        allow(subscriber).to receive(:handle_object_created)
+        allow(class_subscriber).to receive(:handle_object_created)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, any_args)
+        expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message_with_data, any_args)
       end
 
       it 'receive real object if evaluated' do
-        allow(subscriber).to receive(:handle_object_created) { |args| args }
+        allow(class_subscriber).to receive(:handle_object_created) { |args| args }
         stub_request(:get, source_path)
           .to_return(status: 200, body: object.to_json.to_s)
         described_class.publish(message_with_data.to_json.to_s, routing_key)
-        expect(subscriber).to have_received(:handle_object_created).with(message_with_data, hash_including(id: 123))
+        expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message_with_data, hash_including(id: 123))
       end
 
       it 're-queue the message if the get http request fails' do
