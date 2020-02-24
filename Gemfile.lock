@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 5cabde39846a71b541c862dfa6d72c517b317a58
+  revision: b263566be55d0169bc7b279659b8b602658a1aa5
   specs:
-    token_validator (0.5.1)
+    token_validator (0.6.0)
       jose
       json-jwt
       jwt
@@ -82,7 +82,7 @@ GEM
     aes_key_wrap (1.0.1)
     amq-protocol (2.3.0)
     ast (2.4.0)
-    bindata (2.4.4)
+    bindata (2.4.5)
     builder (3.2.4)
     bundler-audit (0.6.1)
       bundler (>= 1.2.0, < 3)
@@ -96,7 +96,7 @@ GEM
       json
       simplecov
       url
-    concurrent-ruby (1.1.5)
+    concurrent-ruby (1.1.6)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     crass (1.0.6)
@@ -141,13 +141,13 @@ GEM
     minitest (5.14.0)
     netrc (0.11.0)
     nio4r (2.5.2)
-    nokogiri (1.10.7)
+    nokogiri (1.10.8)
       mini_portile2 (~> 2.4.0)
     parallel (1.19.1)
     parser (2.7.0.2)
       ast (~> 2.4.0)
     public_suffix (4.0.3)
-    rack (2.2.1)
+    rack (2.2.2)
     rack-test (1.1.0)
       rack (>= 1.0, < 3)
     rails (6.0.2.1)
@@ -241,7 +241,7 @@ GEM
     unf_ext (0.0.7.6)
     unicode-display_width (1.6.1)
     url (0.3.2)
-    webmock (3.8.1)
+    webmock (3.8.2)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
