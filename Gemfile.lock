@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 0ca826de77757aff027f5626ec772cf52302c2eb
+  revision: 2301e2f34a9fde1c300eb360918130f68519cd72
   specs:
     token_validator (0.6.0)
       jose
@@ -82,7 +82,7 @@ GEM
     aes_key_wrap (1.0.1)
     amq-protocol (2.3.0)
     ast (2.4.0)
-    bindata (2.4.5)
+    bindata (2.4.6)
     builder (3.2.4)
     bundler-audit (0.6.1)
       bundler (>= 1.2.0, < 3)
