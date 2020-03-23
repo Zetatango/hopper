@@ -6,40 +6,67 @@ require 'hopper/lazy_source'
 require 'hopper/jobs/publish_retry_job'
 require 'bunny'
 
+# rubocop:disable Metrics/ModuleLength
 module Hopper
   RegistrationStruct = Struct.new(:subscriber, :method, :routing_key, :opts)
 
-  class ConfigurationError < RuntimeError; end
-  class ApiException < StandardError; end
-  class InvalidMessageError < StandardError; end
-  class HopperRetriableError < StandardError; end
-  class HopperNonRetriableError < StandardError; end
+  class HopperError < StandardError; end
+
+  class ApiException < HopperError; end
+  class InvalidMessageError < HopperError; end
+  class HopperRetriableError < HopperError; end
+  class HopperNonRetriableError < HopperError; end
+
+  class HopperInitializationError < HopperError
+    attr_reader :original_exception
+    def initialize(exception)
+      super
+      @original_exception = exception
+    end
+  end
+
+  NOT_CONFIGURED = "not_configured"
+  INITIALIZING = "initializing"
+  INITIALIZED = "initialized"
 
   class << self
-    attr_reader :channel, :queue, :exchange
+    attr_reader :channel, :queue, :exchange, :state
 
     def init_channel(config)
-      connection = Bunny.new config[:url]
-      connection.start
-      @channel = connection.create_channel
-      @exchange = @channel.topic(config[:exchange], durable: true)
-      @queue = @channel.queue(config[:queue], durable: true)
-      bind_subscribers
       Hopper::Configuration.load(config)
-      @configured = true
+      # lock semaphore to stop publishing while initializing
+      semaphore.synchronize do
+        # this should never happen
+        return if initialized?
+
+        @state = INITIALIZING
+        initialize_hopper
+      end
+    rescue Bunny::Exception => e
+      log(:error, "Unable to connect to RabbitMQ: #{e.message}")
+      raise HopperInitializationError, e
     end
 
     def publish(message, key)
-      unless @configured
-        Rails.logger.info("Event #{key} not published as Hopper was not initialized in this environment")
+      if not_configured?
+        log(:info, "Event #{key} not published as Hopper was not initialized in this environment")
+        return
+      end
+
+      if initializing?
+        log(:info, "Event #{key} not published as Hopper was still initializing in this environment")
+        initialize_hopper_attempt
+        # this may or may not succeed on initializing channel so we have to retry
+        Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
+        log(:info, "Event #{key} was successfully published")
         return
       end
 
       message = message.to_json if message.is_a? Hash
       options = message_options(key)
       @exchange.publish(message.to_s, options)
-    rescue Bunny::ConnectionClosedError
-      Rails.logger.error("Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}") if Rails.logger.present?
+    rescue Bunny::Exception
+      log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}")
       Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
     end
 
@@ -61,7 +88,31 @@ module Hopper
       @registrations = []
     end
 
+    def semaphore
+      @semaphore ||= Mutex.new
+    end
+
     private
+
+    def initialize_hopper
+      connection = Bunny.new Hopper::Configuration.url
+      connection.start
+      @channel = connection.create_channel
+      @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)
+      @queue = @channel.queue(Hopper::Configuration.queue, durable: true)
+      bind_subscribers
+      @state = INITIALIZED
+    end
+
+    def initialize_hopper_attempt
+      return unless semaphore.try_lock && !initialized?
+
+      begin
+        initialize_hopper
+      ensure
+        semaphore.unlock
+      end
+    end
 
     def handle_message(delivery_tag, routing_key, message)
       message_data = JSON.parse(message, symbolize_names: true)
@@ -98,5 +149,22 @@ module Hopper
     def registrations
       @registrations ||= []
     end
+
+    def not_configured?
+      @state.blank?
+    end
+
+    def initializing?
+      @state == INITIALIZING
+    end
+
+    def initialized?
+      @state == INITIALIZED
+    end
+
+    def log(level, message)
+      Rails.logger.send(level, message) if Rails.logger.present?
+    end
   end
 end
+# rubocop:enable Metrics/ModuleLength

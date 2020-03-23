@@ -14,18 +14,28 @@ RSpec.describe Hopper do
     }
   end
 
-  describe 'Initialize hopper' do
+  before do
+    described_class.instance_variable_set(:@state, nil)
+  end
+
+  describe '#init_channel' do
     let(:routing_key1) { 'routing_key1' }
     let(:routing_key2) { 'routing_key2' }
+    let(:connection) { BunnyMock.new }
 
     before do
-      allow(Bunny).to receive(:new).and_return(BunnyMock.new)
+      allow(Bunny).to receive(:new).and_return(connection)
     end
 
     it 'does not throw an exception' do
       expect do
         described_class.init_channel(config)
       end.not_to raise_exception
+    end
+
+    it 'initiate connection' do
+      described_class.init_channel(config)
+      expect(connection).to be_open
     end
 
     it 'binds queue to registered routing keys' do
@@ -35,6 +45,24 @@ RSpec.describe Hopper do
 
       expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key1)
       expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key2)
+    end
+
+    it 'does not initialize channel twice' do
+      described_class.instance_variable_set(:@state, Hopper::INITIALIZED)
+      allow(connection).to receive(:start)
+      described_class.init_channel(config)
+      expect(connection).not_to have_received(:start)
+    end
+
+    it 'marks the channel as initialized' do
+      described_class.init_channel(config)
+      expect(described_class.state).to eq(Hopper::INITIALIZED)
+    end
+
+    it 'marks the channel as initializing when it fails' do
+      allow(connection).to receive(:start).and_raise(Bunny::ConnectionClosedError.new(Object.new))
+      expect { described_class.init_channel(config) }.to raise_error(Hopper::HopperInitializationError)
+      expect(described_class.state).to eq(Hopper::INITIALIZING)
     end
   end
 
@@ -63,7 +91,7 @@ RSpec.describe Hopper do
     end
   end
 
-  describe 'publish' do
+  describe '#publish' do
     let(:bunny_server) { BunnyMock.new }
     let(:connection) { bunny_server.start }
     let(:channel) { connection.create_channel }
@@ -81,19 +109,62 @@ RSpec.describe Hopper do
     end
 
     describe 'when not initialized' do
-      before do
-        described_class.instance_variable_set(:@configured, nil)
-        allow(Rails.logger).to receive(:info)
-      end
-
       it 'will ignore events' do
         described_class.publish(message, message_key)
         expect(exchange).not_to have_received(:publish)
       end
 
       it 'will log request' do
+        allow(Rails.logger).to receive(:info)
         described_class.publish(message, message_key)
         expect(Rails.logger).to have_received(:info).with("Event #{message_key} not published as Hopper was not initialized in this environment")
+      end
+    end
+
+    describe 'when initializing' do
+      let(:semaphore) { instance_double('Mutex') }
+
+      before do
+        allow(described_class).to receive(:semaphore).and_return(semaphore)
+        allow(semaphore).to receive(:synchronize).and_yield
+        Hopper::Configuration.load(config)
+        described_class.instance_variable_set(:@state, Hopper::INITIALIZING)
+      end
+
+      describe 'and no other attempt is in progress' do
+        before do
+          allow(semaphore).to receive(:try_lock).and_return(true)
+          allow(semaphore).to receive(:unlock)
+        end
+
+        it 'attempts connection' do
+          described_class.publish(message, message_key)
+          # once called in before
+          expect(bunny_server).to have_received(:start).once
+        end
+
+        it 'retries publish' do
+          described_class.publish(message, message_key)
+          expect(Hopper::PublishRetryJob).to have_been_enqueued
+        end
+      end
+
+      describe 'and another attempt is in progress' do
+        before do
+          allow(semaphore).to receive(:try_lock).and_return(false)
+        end
+
+        it 'does not attempt connection' do
+          described_class.publish(message, message_key)
+          # once called in before
+          expect(bunny_server).not_to have_received(:start)
+        end
+
+        it 'retries publish' do
+          described_class.publish(message, message_key)
+          # once called in before
+          expect(Hopper::PublishRetryJob).to have_been_enqueued
+        end
       end
     end
 
