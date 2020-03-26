@@ -36,4 +36,10 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  logger = Logger.new($stdout)
+  config.before do
+    logger = Logger.new($stdout)
+    allow(Rails).to receive(:logger).and_return(logger)
+  end
 end
