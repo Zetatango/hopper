@@ -8,7 +8,9 @@ require 'bunny'
 
 # rubocop:disable Metrics/ModuleLength
 module Hopper
+  # rubocop:disable Lint/StructNewOverride
   RegistrationStruct = Struct.new(:subscriber, :method, :routing_key, :opts)
+  # rubocop:enable Lint/StructNewOverride
 
   class HopperError < StandardError; end
 
