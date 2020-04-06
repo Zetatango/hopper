@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 674388f1b2340c5ad5f6dd23aa61866877a96f97
+  revision: a3f047b770c81752c1b779d3907961c8094f2e05
   specs:
     token_validator (0.6.0)
       jose
@@ -124,7 +124,7 @@ GEM
       aes_key_wrap
       bindata
     jwt (2.2.1)
-    loofah (2.4.0)
+    loofah (2.5.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     mail (2.7.1)
@@ -146,7 +146,7 @@ GEM
     parallel (1.19.1)
     parser (2.7.0.5)
       ast (~> 2.4.0)
-    public_suffix (4.0.3)
+    public_suffix (4.0.4)
     rack (2.2.2)
     rack-test (1.1.0)
       rack (>= 1.0, < 3)
@@ -236,7 +236,7 @@ GEM
     thor (0.20.3)
     thread_safe (0.3.6)
     timecop (0.9.1)
-    tzinfo (1.2.6)
+    tzinfo (1.2.7)
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
