@@ -91,7 +91,7 @@ GEM
       amq-protocol (~> 2.3, >= 2.3.1)
     bunny-mock (1.7.0)
       bunny (>= 1.7)
-    byebug (11.1.1)
+    byebug (11.1.2)
     codecov (0.1.16)
       json
       simplecov
