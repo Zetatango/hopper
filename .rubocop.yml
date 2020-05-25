@@ -15,10 +15,10 @@ AllCops:
     SpecTypes:
       Feature: 'spec/features/**/*'
 
-Documentation:
+Style/Documentation:
   Enabled: false
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 160
 
 Metrics/ClassLength:
@@ -61,4 +61,19 @@ Lint/RaiseException:
   Enabled: true
 
 Lint/StructNewOverride:
+  Enabled: true
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: true
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: true
+
+Style/ExponentialNotation:
+  Enabled: true
+
+Style/SlicingWithRange:
   Enabled: true
