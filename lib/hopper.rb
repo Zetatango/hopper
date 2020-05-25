@@ -21,6 +21,7 @@ module Hopper
 
   class HopperInitializationError < HopperError
     attr_reader :original_exception
+
     def initialize(exception)
       super
       @original_exception = exception
