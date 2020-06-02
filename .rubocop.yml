@@ -77,3 +77,12 @@ Style/ExponentialNotation:
 
 Style/SlicingWithRange:
   Enabled: true
+
+Lint/MixedRegexpCaptureTypes:
+  Enabled: true
+
+Style/RedundantRegexpCharacterClass:
+  Enabled: true
+
+Style/RedundantRegexpEscape:
+  Enabled: true
