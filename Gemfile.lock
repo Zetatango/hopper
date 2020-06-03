@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: d19c955bec6a8077921cd5deea587e42f1ed3722
+  revision: 542462555875b6a3d08fafb87bf627d829cb9ab0
   specs:
     token_validator (0.6.1)
       jose
@@ -252,7 +252,7 @@ GEM
       hashdiff (>= 0.4.0, < 2.0.0)
     websocket-driver (0.7.2)
       websocket-extensions (>= 0.1.0)
-    websocket-extensions (0.1.4)
+    websocket-extensions (0.1.5)
     zeitwerk (2.3.0)
 
 PLATFORMS
