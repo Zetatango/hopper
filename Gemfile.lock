@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: eeeb39bf04f84e96d1af98575d6c3a7694b72988
+  revision: 9086b17c80e86d3c4a3cbec55c129c8da0595f0e
   specs:
     token_validator (0.6.1)
       jose
@@ -141,7 +141,7 @@ GEM
     minitest (5.14.1)
     netrc (0.11.0)
     nio4r (2.5.2)
-    nokogiri (1.10.9)
+    nokogiri (1.10.10)
       mini_portile2 (~> 2.4.0)
     parallel (1.19.2)
     parser (2.7.1.4)
@@ -255,7 +255,7 @@ GEM
     websocket-driver (0.7.2)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    zeitwerk (2.3.0)
+    zeitwerk (2.3.1)
 
 PLATFORMS
   ruby
