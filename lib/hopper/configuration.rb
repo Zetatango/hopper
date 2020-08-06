@@ -20,8 +20,10 @@ class Hopper::Configuration
       @configuration[method.to_sym]
     end
 
+    # rubocop:disable Lint/MissingSuper, Style/OptionalBooleanParameter
     def respond_to_missing?(method, _include_private = false)
       @configuration.key?(method.to_sym)
     end
+    # rubocop:enable Lint/MissingSuper, Style/OptionalBooleanParameter
   end
 end
