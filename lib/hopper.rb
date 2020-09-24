@@ -130,7 +130,7 @@ module Hopper
 
         registration.subscriber.send(registration.method, routing_key, message_data, source_object)
 
-        log(:info, "Sending #{routing_key} message to #{registration.method}")
+        log(:info, "Sending #{routing_key} message to #{registration.subscriber}:#{registration.method}")
       end
 
       log(:info, "Acknowledging #{delivery_tag}.")
