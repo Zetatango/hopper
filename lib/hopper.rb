@@ -126,14 +126,18 @@ module Hopper
       message_data = JSON.parse(message, symbolize_names: true)
       source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
       registrations.each do |registration|
-        registration.subscriber.send(registration.method, routing_key, message_data, source_object) if registration.routing_key == routing_key
+        next unless registration.routing_key == routing_key
+
+        registration.subscriber.send(registration.method, routing_key, message_data, source_object)
+
+        log(:info, "Sending #{routing_key} message to #{registration.method}")
       end
 
       log(:info, "Acknowledging #{delivery_tag}.")
 
       @channel.acknowledge(delivery_tag, false)
     rescue HopperRetriableError
-      log(:error, "Rejecting #{delivery_tag} due to retriable error")
+      log(:warn, "Rejecting #{delivery_tag} due to retriable error")
 
       # it means it's a temporary error and the error needs to be re-sent
       @channel.reject(delivery_tag, true)
