@@ -7,7 +7,8 @@ class Hopper::Configuration
     attr_accessor :configuration
 
     DEFAULTS = {
-      publish_retry_wait: 1.minute
+      publish_retry_wait: 1.minute,
+      verify_peer: false
     }.freeze
 
     def load(configuration)

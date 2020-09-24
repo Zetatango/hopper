@@ -98,7 +98,10 @@ module Hopper
     private
 
     def initialize_hopper
-      connection = Bunny.new Hopper::Configuration.url
+      options = {
+        verify_peer: Hopper::Configuration.verify_peer
+      }
+      connection = Bunny.new Hopper::Configuration.url, options
       connection.start
       @channel = connection.create_channel
       @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)
@@ -118,16 +121,29 @@ module Hopper
     end
 
     def handle_message(delivery_tag, routing_key, message)
+      log(:info, "Received message for routing key #{routing_key}.")
+
       message_data = JSON.parse(message, symbolize_names: true)
       source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
       registrations.each do |registration|
-        registration.subscriber.send(registration.method, routing_key, message_data, source_object) if registration.routing_key == routing_key
+        next unless registration.routing_key == routing_key
+
+        registration.subscriber.send(registration.method, routing_key, message_data, source_object)
+
+        log(:info, "Sending #{routing_key} message to #{registration.subscriber}:#{registration.method}")
       end
+
+      log(:info, "Acknowledging #{delivery_tag}.")
+
       @channel.acknowledge(delivery_tag, false)
     rescue HopperRetriableError
+      log(:warn, "Rejecting #{delivery_tag} due to retriable error")
+
       # it means it's a temporary error and the error needs to be re-sent
       @channel.reject(delivery_tag, true)
     rescue HopperNonRetriableError
+      log(:error, "Acknowledging #{delivery_tag} due to non-retriable error")
+
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
       @channel.acknowledge(delivery_tag, false)
