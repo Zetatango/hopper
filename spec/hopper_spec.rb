@@ -38,6 +38,17 @@ RSpec.describe Hopper do
       expect(connection).to be_open
     end
 
+    it 'sets the verify_peer option (default options)' do
+      described_class.init_channel(config)
+      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: false)
+    end
+
+    it 'sets the verify_peer option' do
+      config[:verify_peer] = true
+      described_class.init_channel(config)
+      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: true)
+    end
+
     it 'binds queue to registered routing keys' do
       described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
 

@@ -14,6 +14,16 @@ RSpec.describe Hopper::Configuration do
       expect(described_class.publish_retry_wait).to eq(2.minutes)
     end
 
+    it 'sets default verify_peer' do
+      described_class.load({})
+      expect(described_class.verify_peer).to eq(false)
+    end
+
+    it 'overrides default verify_peer' do
+      described_class.load(verify_peer: true)
+      expect(described_class.verify_peer).to eq(true)
+    end
+
     it 'raises NoMethodError for unknown configuration options' do
       expect { described_class.unknown_config }.to raise_error(NoMethodError)
     end

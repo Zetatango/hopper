@@ -98,7 +98,10 @@ module Hopper
     private
 
     def initialize_hopper
-      connection = Bunny.new Hopper::Configuration.url
+      options = {
+        verify_peer: Hopper::Configuration.verify_peer
+      }
+      connection = Bunny.new Hopper::Configuration.url, options
       connection.start
       @channel = connection.create_channel
       @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)
