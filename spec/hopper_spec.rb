@@ -49,17 +49,6 @@ RSpec.describe Hopper do
       expect(Bunny).to have_received(:new).with(config[:url], verify_peer: true)
     end
 
-    it 'sets the uncaught_exception_handler when set' do
-      handler = proc { |_error, _component| nil }
-      config[:uncaught_exception_handler] = handler
-
-      allow(connection).to receive(:on_uncaught_exception)
-
-      described_class.init_channel(config)
-
-      expect(connection).to have_received(:on_uncaught_exception).with(handler)
-    end
-
     it 'binds queue to registered routing keys' do
       described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
 
@@ -128,6 +117,21 @@ RSpec.describe Hopper do
       allow(channel).to receive(:topic).and_return(exchange)
       allow(exchange).to receive(:publish)
       ActiveJob::Base.queue_adapter = :test
+    end
+
+    describe 'when uncaught_exception_handler is set' do
+      it 'sets the uncaught_exception_handler' do
+        handler = proc { |_error, _component| nil }
+        config[:uncaught_exception_handler] = handler
+
+        allow(channel).to receive(:on_uncaught_exception)
+
+        described_class.init_channel(config)
+
+        expect(channel).to have_received(:on_uncaught_exception).with(no_args) do |*_args, &block|
+          expect(handler).to be(block)
+        end
+      end
     end
 
     describe 'when not initialized' do
