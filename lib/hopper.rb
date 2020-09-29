@@ -104,6 +104,7 @@ module Hopper
       connection = Bunny.new Hopper::Configuration.url, options
       connection.start
       @channel = connection.create_channel
+      @channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
       @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)
       @queue = @channel.queue(Hopper::Configuration.queue, durable: true)
       bind_subscribers

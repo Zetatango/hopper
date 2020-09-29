@@ -119,6 +119,21 @@ RSpec.describe Hopper do
       ActiveJob::Base.queue_adapter = :test
     end
 
+    describe 'when uncaught_exception_handler is set' do
+      it 'sets the uncaught_exception_handler' do
+        handler = proc { |_error, _component| nil }
+        config[:uncaught_exception_handler] = handler
+
+        allow(channel).to receive(:on_uncaught_exception)
+
+        described_class.init_channel(config)
+
+        expect(channel).to have_received(:on_uncaught_exception).with(no_args) do |*_args, &block|
+          expect(handler).to be(block)
+        end
+      end
+    end
+
     describe 'when not initialized' do
       it 'will ignore events' do
         described_class.publish(message, message_key)
