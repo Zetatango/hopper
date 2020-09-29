@@ -50,7 +50,7 @@ RSpec.describe Hopper do
     end
 
     it 'sets the uncaught_exception_handler when set' do
-      handler = Proc.new { |_error, _component| nil }
+      handler = proc { |_error, _component| nil }
       config[:uncaught_exception_handler] = handler
 
       allow(connection).to receive(:on_uncaught_exception)

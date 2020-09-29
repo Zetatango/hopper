@@ -29,7 +29,7 @@ RSpec.describe Hopper::Configuration do
     end
 
     it 'sets uncaught_exception_handler' do
-      handler = Proc.new {}
+      handler = proc {}
       described_class.load(uncaught_exception_handler: handler)
       expect(described_class.uncaught_exception_handler).to eq(handler)
     end
