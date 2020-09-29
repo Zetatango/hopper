@@ -102,6 +102,11 @@ module Hopper
         verify_peer: Hopper::Configuration.verify_peer
       }
       connection = Bunny.new Hopper::Configuration.url, options
+
+      if Hopper::Configuration.uncaught_exception_handler.present?
+        connection.on_uncaught_exception(Hopper::Configuration.uncaught_exception_handler)
+      end
+
       connection.start
       @channel = connection.create_channel
       @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)

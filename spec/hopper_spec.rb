@@ -49,6 +49,17 @@ RSpec.describe Hopper do
       expect(Bunny).to have_received(:new).with(config[:url], verify_peer: true)
     end
 
+    it 'sets the uncaught_exception_handler when set' do
+      handler = Proc.new { |_error, _component| nil }
+      config[:uncaught_exception_handler] = handler
+
+      allow(connection).to receive(:on_uncaught_exception)
+
+      described_class.init_channel(config)
+
+      expect(connection).to have_received(:on_uncaught_exception).with(handler)
+    end
+
     it 'binds queue to registered routing keys' do
       described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
 

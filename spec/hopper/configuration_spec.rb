@@ -24,6 +24,16 @@ RSpec.describe Hopper::Configuration do
       expect(described_class.verify_peer).to eq(true)
     end
 
+    it 'sets the default uncaught_exception_handler to nil by default' do
+      expect(described_class.uncaught_exception_handler).to be_nil
+    end
+
+    it 'sets uncaught_exception_handler' do
+      handler = Proc.new {}
+      described_class.load(uncaught_exception_handler: handler)
+      expect(described_class.uncaught_exception_handler).to eq(handler)
+    end
+
     it 'raises NoMethodError for unknown configuration options' do
       expect { described_class.unknown_config }.to raise_error(NoMethodError)
     end
