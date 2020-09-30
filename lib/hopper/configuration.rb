@@ -9,7 +9,8 @@ class Hopper::Configuration
     DEFAULTS = {
       publish_retry_wait: 1.minute,
       verify_peer: false,
-      uncaught_exception_handler: nil
+      uncaught_exception_handler: nil,
+      consumer_tag: nil
     }.freeze
 
     def load(configuration)

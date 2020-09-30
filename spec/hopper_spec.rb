@@ -109,6 +109,7 @@ RSpec.describe Hopper do
     let(:exchange) { channel.topic('test') }
     let(:message) { 'Hello' }
     let(:message_key) { 'message_key' }
+    let(:message_id) { SecureRandom.uuid }
 
     before do
       allow(Bunny).to receive(:new).and_return(bunny_server)
@@ -200,8 +201,9 @@ RSpec.describe Hopper do
       end
 
       it 'will publish the message on the channel' do
+        allow(SecureRandom).to receive(:uuid).and_return(message_id)
         described_class.publish(message, message_key)
-        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true)
+        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true, message_id: message_id)
       end
 
       it 'will not trigger the retry job if the publish succeeds' do

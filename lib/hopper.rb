@@ -61,13 +61,14 @@ module Hopper
         initialize_hopper_attempt
         # this may or may not succeed on initializing channel so we have to retry
         Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
-        log(:info, "Event #{key} was successfully published")
+        log(:info, "Event #{key} was queued for publishing")
         return
       end
 
       message = message.to_json if message.is_a? Hash
       options = message_options(key)
       @exchange.publish(message.to_s, options)
+      log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
     rescue Bunny::Exception
       log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}")
       Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
@@ -82,7 +83,9 @@ module Hopper
     end
 
     def start_listening
-      @queue.subscribe(manual_ack: true, block: false) do |delivery_info, _properties, body|
+      @queue.subscribe(manual_ack: true, block: false, consumer_tag: Hopper::Configuration.consumer_tag) do |delivery_info, properties, body|
+        log(:info,
+            "Received RabbitMQ message: key=#{delivery_info.routing_key}, id=#{properties[:message_id]}. tag=#{delivery_info.delivery_tag}")
         handle_message(delivery_info.delivery_tag, delivery_info.routing_key, body)
       end
     end
@@ -122,16 +125,13 @@ module Hopper
     end
 
     def handle_message(delivery_tag, routing_key, message)
-      log(:info, "Received message for routing key #{routing_key}.")
-
       message_data = JSON.parse(message, symbolize_names: true)
       source_object = LazySource.new(message_data[:source]) unless message_data[:source].nil?
       registrations.each do |registration|
         next unless registration.routing_key == routing_key
 
-        registration.subscriber.send(registration.method, routing_key, message_data, source_object)
-
         log(:info, "Sending #{routing_key} message to #{registration.subscriber}:#{registration.method}")
+        registration.subscriber.send(registration.method, routing_key, message_data, source_object)
       end
 
       log(:info, "Acknowledging #{delivery_tag}.")
@@ -154,7 +154,8 @@ module Hopper
       {
         routing_key: key,
         mandatory: true,
-        persistent: true
+        persistent: true,
+        message_id: SecureRandom.uuid
       }
     end
 
