@@ -34,6 +34,16 @@ RSpec.describe Hopper::Configuration do
       expect(described_class.uncaught_exception_handler).to eq(handler)
     end
 
+    it 'sets consumer_tag to nil by default' do
+      described_class.load({})
+      expect(described_class.consumer_tag).to be_nil
+    end
+
+    it 'sets consumer_tag' do
+      described_class.load(consumer_tag: 'web1')
+      expect(described_class.consumer_tag).to eq('web1')
+    end
+
     it 'raises NoMethodError for unknown configuration options' do
       expect { described_class.unknown_config }.to raise_error(NoMethodError)
     end
