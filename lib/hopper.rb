@@ -69,8 +69,8 @@ module Hopper
       options = message_options(key)
       @exchange.publish(message.to_s, options)
       log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
-    rescue Bunny::Exception
-      log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}")
+    rescue Bunny::Exception => e
+      log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}. Error: #{e.message}")
       Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
     end
 
@@ -86,7 +86,9 @@ module Hopper
       @queue.subscribe(manual_ack: true, block: false, consumer_tag: Hopper::Configuration.consumer_tag) do |delivery_info, properties, body|
         log(:info,
             "Received RabbitMQ message: key=#{delivery_info.routing_key}, id=#{properties[:message_id]}. tag=#{delivery_info.delivery_tag}")
-        handle_message(delivery_info.delivery_tag, delivery_info.routing_key, body)
+        with_log_tagging(properties[:message_id]) do
+          handle_message(delivery_info.delivery_tag, delivery_info.routing_key, body)
+        end
       end
     end
 
@@ -104,6 +106,8 @@ module Hopper
       options = {
         verify_peer: Hopper::Configuration.verify_peer
       }
+      options[:logger] = Rails.logger if Rails.logger.present?
+
       connection = Bunny.new Hopper::Configuration.url, options
       connection.start
       @channel = connection.create_channel
@@ -185,6 +189,14 @@ module Hopper
 
     def log(level, message)
       Rails.logger.send(level, message) if Rails.logger.present?
+    end
+
+    def with_log_tagging(message_id, &block)
+      yield block unless Rails.logger.present?
+
+      Rails.logger.tagged(message_id) do
+        yield block
+      end
     end
   end
 end
