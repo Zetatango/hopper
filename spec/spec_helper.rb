@@ -37,9 +37,9 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  logger = Logger.new($stdout)
   config.before do
     logger = Logger.new($stdout)
+    allow(logger).to receive(:tagged).and_yield
     allow(Rails).to receive(:logger).and_return(logger)
   end
 end
