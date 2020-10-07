@@ -14,7 +14,7 @@ GIT
 PATH
   remote: .
   specs:
-    hopper (0.5.0)
+    hopper (0.6.7)
       bunny (>= 2.13.0)
       rails
       rest-client
@@ -281,7 +281,7 @@ DEPENDENCIES
   token_validator!
 
 RUBY VERSION
-   ruby 2.7.1p83
+   ruby 2.7.2p137
 
 BUNDLED WITH
    2.1.4

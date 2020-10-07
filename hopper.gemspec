@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'A library that handles event messaging needs for zt services'
   spec.homepage      = 'https://github.com/Zetatango/hopper'
-  spec.required_ruby_version = '>= 2.7.1'
+  spec.required_ruby_version = '>= 2.7.2'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
