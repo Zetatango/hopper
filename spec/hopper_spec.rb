@@ -18,6 +18,13 @@ RSpec.describe Hopper do
     described_class.instance_variable_set(:@state, nil)
   end
 
+  after do
+    Thread.current[:hopper_connection] = nil
+    Thread.current[:hopper_queue] = nil
+    Thread.current[:hopper_exchange] = nil
+    Thread.current[:hopper_channel] = nil
+  end
+
   describe '#init_channel' do
     let(:routing_key1) { 'routing_key1' }
     let(:routing_key2) { 'routing_key2' }
@@ -40,13 +47,13 @@ RSpec.describe Hopper do
 
     it 'sets the verify_peer option (default options)' do
       described_class.init_channel(config)
-      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: false, logger: Rails.logger)
+      expect(Bunny).to have_received(:new).with(config[:url], hash_including(verify_peer: false))
     end
 
     it 'sets the verify_peer option' do
       config[:verify_peer] = true
       described_class.init_channel(config)
-      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: true, logger: Rails.logger)
+      expect(Bunny).to have_received(:new).with(config[:url], hash_including(verify_peer: true))
     end
 
     it 'binds queue to registered routing keys' do
@@ -213,6 +220,12 @@ RSpec.describe Hopper do
 
       it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
         allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).to have_been_enqueued
+      end
+
+      it 'will re-queue message if channel does not confirm publish' do
+        allow(described_class.channel).to receive(:wait_for_confirms).and_return(false)
         described_class.publish(message, message_key)
         expect(Hopper::PublishRetryJob).to have_been_enqueued
       end
