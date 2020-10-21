@@ -48,6 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'timecop'
 
   spec.add_dependency 'bunny', '>= 2.13.0'
+  spec.add_dependency 'connection_pool'
   spec.add_dependency 'rails'
   spec.add_dependency 'rest-client'
 end

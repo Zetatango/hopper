@@ -5,6 +5,7 @@ require 'hopper/configuration'
 require 'hopper/lazy_source'
 require 'hopper/jobs/publish_retry_job'
 require 'bunny'
+require 'connection_pool'
 
 # rubocop:disable Metrics/ModuleLength
 module Hopper
@@ -33,7 +34,7 @@ module Hopper
   INITIALIZED = "initialized"
 
   class << self
-    attr_reader :channel, :queue, :exchange, :state
+    attr_reader :listening_channel, :queue, :state, :connection
 
     def init_channel(config)
       Hopper::Configuration.load(config)
@@ -67,8 +68,19 @@ module Hopper
 
       message = message.to_json if message.is_a? Hash
       options = message_options(key)
-      @exchange.publish(message.to_s, options)
-      log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
+
+      @pool.with do |channel|
+        exchange = channel.topic(Hopper::Configuration.exchange, durable: true)
+        exchange.publish(message.to_s, options)
+        success = channel.wait_for_confirms
+
+        if success
+          log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
+        else
+          log(:error, "Confirmation not received for #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}.")
+          Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
+        end
+      end
     rescue Bunny::Exception => e
       log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}. Error: #{e.message}")
       Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
@@ -103,17 +115,24 @@ module Hopper
     private
 
     def initialize_hopper
-      options = {
-        verify_peer: Hopper::Configuration.verify_peer
-      }
+      options = Hopper::Configuration.configuration
       options[:logger] = Rails.logger if Rails.logger.present?
 
       connection = Bunny.new Hopper::Configuration.url, options
       connection.start
-      @channel = connection.create_channel
-      @channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
-      @exchange = @channel.topic(Hopper::Configuration.exchange, durable: true)
-      @queue = @channel.queue(Hopper::Configuration.queue, durable: true)
+
+      @pool ||= ConnectionPool.new do
+        channel = connection.create_channel
+        channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+        channel.confirm_select
+        channel
+      end
+
+      @listening_channel = @pool.checkout
+      @listening_channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+      @listening_channel.topic(Hopper::Configuration.exchange, durable: true)
+      @queue = @listening_channel.queue(Hopper::Configuration.queue, durable: true)
+
       bind_subscribers
       @state = INITIALIZED
     end
@@ -140,18 +159,18 @@ module Hopper
 
       log(:info, "Acknowledging #{delivery_tag}.")
 
-      @channel.acknowledge(delivery_tag, false)
+      @listening_channel.acknowledge(delivery_tag, false)
     rescue HopperRetriableError
       log(:warn, "Rejecting #{delivery_tag} due to retriable error")
 
       # it means it's a temporary error and the error needs to be re-sent
-      @channel.reject(delivery_tag, true)
+      @listening_channel.reject(delivery_tag, true)
     rescue HopperNonRetriableError
       log(:error, "Acknowledging #{delivery_tag} due to non-retriable error")
 
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
-      @channel.acknowledge(delivery_tag, false)
+      @listening_channel.acknowledge(delivery_tag, false)
     end
 
     def message_options(key)
