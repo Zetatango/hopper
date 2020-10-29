@@ -5,7 +5,6 @@ require 'hopper/configuration'
 require 'hopper/lazy_source'
 require 'hopper/jobs/publish_retry_job'
 require 'bunny'
-require 'connection_pool'
 
 # rubocop:disable Metrics/ModuleLength
 module Hopper
@@ -34,7 +33,7 @@ module Hopper
   INITIALIZED = "initialized"
 
   class << self
-    attr_reader :listening_channel, :queue, :state, :connection
+    attr_reader :state
 
     def init_channel(config)
       Hopper::Configuration.load(config)
@@ -68,18 +67,15 @@ module Hopper
 
       message = message.to_json if message.is_a? Hash
       options = message_options(key)
+      exchange.publish(message.to_s, options)
 
-      @pool.with do |channel|
-        exchange = channel.topic(Hopper::Configuration.exchange, durable: true)
-        exchange.publish(message.to_s, options)
-        success = channel.wait_for_confirms
+      success = channel.wait_for_confirms
 
-        if success
-          log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
-        else
-          log(:error, "Confirmation not received for #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}.")
-          Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
-        end
+      if success
+        log(:info, "Sent RabbitMQ message: key=#{key}, id=#{options[:message_id]}")
+      else
+        log(:error, "Confirmation not received for #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}.")
+        Hopper::PublishRetryJob.set(wait: Hopper::Configuration.publish_retry_wait).perform_later(message, key)
       end
     rescue Bunny::Exception => e
       log(:error, "Unable to publish message #{key}:#{message}. Retrying in #{Hopper::Configuration.publish_retry_wait}. Error: #{e.message}")
@@ -89,13 +85,13 @@ module Hopper
     def subscribe(subscriber, method, routing_keys, opts = {})
       routing_keys.each do |routing_key|
         registration = RegistrationStruct.new(subscriber, method, routing_key, opts)
-        @queue.bind(@exchange, routing_key: routing_key) if @queue.present?
+        queue.bind(exchange, routing_key: routing_key)
         registrations << registration
       end
     end
 
     def start_listening
-      @queue.subscribe(manual_ack: true, block: false, consumer_tag: Hopper::Configuration.consumer_tag) do |delivery_info, properties, body|
+      queue.subscribe(manual_ack: true, block: false, consumer_tag: Hopper::Configuration.consumer_tag) do |delivery_info, properties, body|
         log(:info,
             "Received RabbitMQ message: key=#{delivery_info.routing_key}, id=#{properties[:message_id]}. tag=#{delivery_info.delivery_tag}")
         with_log_tagging(properties[:message_id]) do
@@ -115,24 +111,6 @@ module Hopper
     private
 
     def initialize_hopper
-      options = Hopper::Configuration.configuration
-      options[:logger] = Rails.logger if Rails.logger.present?
-
-      connection = Bunny.new Hopper::Configuration.url, options
-      connection.start
-
-      @pool ||= ConnectionPool.new do
-        channel = connection.create_channel
-        channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
-        channel.confirm_select
-        channel
-      end
-
-      @listening_channel = @pool.checkout
-      @listening_channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
-      @listening_channel.topic(Hopper::Configuration.exchange, durable: true)
-      @queue = @listening_channel.queue(Hopper::Configuration.queue, durable: true)
-
       bind_subscribers
       @state = INITIALIZED
     end
@@ -159,18 +137,18 @@ module Hopper
 
       log(:info, "Acknowledging #{delivery_tag}.")
 
-      @listening_channel.acknowledge(delivery_tag, false)
+      channel.acknowledge(delivery_tag, false)
     rescue HopperRetriableError
       log(:warn, "Rejecting #{delivery_tag} due to retriable error")
 
       # it means it's a temporary error and the error needs to be re-sent
-      @listening_channel.reject(delivery_tag, true)
+      channel.reject(delivery_tag, true)
     rescue HopperNonRetriableError
       log(:error, "Acknowledging #{delivery_tag} due to non-retriable error")
 
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
-      @listening_channel.acknowledge(delivery_tag, false)
+      channel.acknowledge(delivery_tag, false)
     end
 
     def message_options(key)
@@ -185,7 +163,7 @@ module Hopper
     def bind_subscribers
       already_registered = Set.new
       registrations.each do |registration|
-        @queue.bind(@exchange, routing_key: registration.routing_key) unless already_registered.include?(registration.routing_key)
+        queue.bind(exchange, routing_key: registration.routing_key) unless already_registered.include?(registration.routing_key)
         already_registered << registration.routing_key
       end
     end
@@ -216,6 +194,47 @@ module Hopper
       Rails.logger.tagged(message_id) do
         yield block
       end
+    end
+
+    def connection
+      thread_local_variable(:hopper_connection) do
+        options = Hopper::Configuration.configuration
+        options[:logger] = Rails.logger if Rails.logger.present?
+
+        hopper_connection = Bunny.new Hopper::Configuration.url, options
+        hopper_connection.start
+      end
+    end
+
+    def queue
+      thread_local_variable(:hopper_queue) do
+        channel.queue(Hopper::Configuration.queue, durable: true)
+      end
+    end
+
+    def exchange
+      thread_local_variable(:hopper_exchange) do
+        channel.topic(Hopper::Configuration.exchange, durable: true)
+      end
+    end
+
+    def channel
+      thread_local_variable(:hopper_channel) do
+        channel = connection.create_channel
+        channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+        channel.confirm_select
+        channel
+      end
+    end
+
+    def thread_local_variable(var_name, &block)
+      result = Thread.current[var_name]
+      unless result.present?
+        result = yield block
+        Thread.current[var_name] = result
+      end
+
+      result
     end
   end
 end

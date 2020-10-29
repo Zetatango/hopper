@@ -14,9 +14,8 @@ GIT
 PATH
   remote: .
   specs:
-    hopper (0.6.12)
+    hopper (0.6.16)
       bunny (>= 2.13.0)
-      connection_pool
       rails
       rest-client
 
@@ -99,7 +98,6 @@ GEM
       simplecov
     colorize (0.8.1)
     concurrent-ruby (1.1.7)
-    connection_pool (2.2.3)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     crass (1.0.6)
