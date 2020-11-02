@@ -85,7 +85,7 @@ module Hopper
     def subscribe(subscriber, method, routing_keys, opts = {})
       routing_keys.each do |routing_key|
         registration = RegistrationStruct.new(subscriber, method, routing_key, opts)
-        queue.bind(exchange, routing_key: routing_key)
+        queue.bind(exchange(listening_channel), routing_key: routing_key)
         registrations << registration
       end
     end
@@ -110,40 +110,48 @@ module Hopper
 
     def connection
       thread_local_variable(:hopper_connection) do
-        options = Hopper::Configuration.configuration
-        options[:logger] = Rails.logger if Rails.logger.present?
-
-        hopper_connection = Bunny.new Hopper::Configuration.url, options
-        hopper_connection.start
+        create_connection
       end
+    end
+
+    def listening_channel
+      @listening_channel ||=
+        begin
+         ch = create_connection.create_channel
+         ch.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+         ch
+       end
     end
 
     def queue
-      thread_local_variable(:hopper_queue) do
-        channel.queue(Hopper::Configuration.queue, durable: true)
-      end
-    end
-
-    def exchange
-      thread_local_variable(:hopper_exchange) do
-        channel.topic(Hopper::Configuration.exchange, durable: true)
-      end
+      @queue ||= listening_channel.queue(Hopper::Configuration.queue, durable: true)
     end
 
     def channel
-      thread_local_variable(:hopper_channel) do
-        channel = connection.create_channel
-        channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
-        channel.confirm_select
-        channel
+      current_channel = thread_local_variable(:hopper_channel) do
+        create_channel
       end
+
+      if current_channel.closed?
+        log(:warn, "Channel #{current_channel.id} was found to be closed, re-creating")
+        current_channel = create_channel
+        Thread.current[:hopper_channel] = current_channel
+      end
+
+      current_channel
+    end
+
+    def exchange(use_channel = channel)
+      use_channel.topic(Hopper::Configuration.exchange, durable: true)
     end
 
     private
 
     def initialize_hopper
-      # initialize connection
-      connection
+      # call queue just to create the queue if it doesn't exist
+      @queue = listening_channel.queue(Hopper::Configuration.queue, durable: true)
+      listening_channel.topic(Hopper::Configuration.exchange, durable: true)
+
       bind_subscribers
       @state = INITIALIZED
     end
@@ -171,18 +179,18 @@ module Hopper
 
       log(:info, "Acknowledging #{delivery_tag}.")
 
-      channel.acknowledge(delivery_tag, false)
+      @listening_channel.acknowledge(delivery_tag, false)
     rescue HopperRetriableError
       log(:warn, "Rejecting #{delivery_tag} due to retriable error")
 
       # it means it's a temporary error and the error needs to be re-sent
-      channel.reject(delivery_tag, true)
+      @listening_channel.reject(delivery_tag, true)
     rescue HopperNonRetriableError
       log(:error, "Acknowledging #{delivery_tag} due to non-retriable error")
 
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
-      channel.acknowledge(delivery_tag, false)
+      @listening_channel.acknowledge(delivery_tag, false)
     end
 
     def message_options(key)
@@ -197,7 +205,7 @@ module Hopper
     def bind_subscribers
       already_registered = Set.new
       registrations.each do |registration|
-        queue.bind(exchange, routing_key: registration.routing_key) unless already_registered.include?(registration.routing_key)
+        queue.bind(exchange(listening_channel), routing_key: registration.routing_key) unless already_registered.include?(registration.routing_key)
         already_registered << registration.routing_key
       end
     end
@@ -228,6 +236,24 @@ module Hopper
       Rails.logger.tagged(message_id) do
         yield block
       end
+    end
+
+    def create_connection
+      log(:info, "Creating new connection for #{Thread.current}")
+      options = Hopper::Configuration.configuration
+      options[:logger] = Rails.logger if Rails.logger.present?
+
+      hopper_connection = Bunny.new Hopper::Configuration.url, options
+      hopper_connection.start
+      hopper_connection
+    end
+
+    def create_channel
+      new_channel = connection.create_channel
+      new_channel.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+      new_channel.confirm_select
+      log(:info, "Creating new channel #{new_channel.id} for #{Thread.current}")
+      new_channel
     end
 
     def thread_local_variable(var_name, &block)

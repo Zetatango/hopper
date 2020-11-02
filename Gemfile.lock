@@ -14,7 +14,7 @@ GIT
 PATH
   remote: .
   specs:
-    hopper (0.6.16)
+    hopper (0.6.20)
       bunny (>= 2.13.0)
       rails
       rest-client
