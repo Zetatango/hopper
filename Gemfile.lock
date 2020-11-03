@@ -14,7 +14,7 @@ GIT
 PATH
   remote: .
   specs:
-    hopper (0.6.7)
+    hopper (0.6.20)
       bunny (>= 2.13.0)
       rails
       rest-client
@@ -80,14 +80,14 @@ GEM
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     aes_key_wrap (1.1.0)
-    amq-protocol (2.3.1)
+    amq-protocol (2.3.2)
     ast (2.4.1)
     bindata (2.4.8)
     builder (3.2.4)
     bundler-audit (0.7.0.1)
       bundler (>= 1.2.0, < 3)
       thor (>= 0.18, < 2)
-    bunny (2.15.0)
+    bunny (2.17.0)
       amq-protocol (~> 2.3, >= 2.3.1)
     bunny-mock (1.7.0)
       bunny (>= 1.7)

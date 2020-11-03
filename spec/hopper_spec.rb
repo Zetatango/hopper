@@ -18,6 +18,12 @@ RSpec.describe Hopper do
     described_class.instance_variable_set(:@state, nil)
   end
 
+  after do
+    Thread.current[:hopper_connection] = nil
+    Thread.current[:hopper_channel] = nil
+    described_class.instance_variable_set(:@listening_channel, nil)
+  end
+
   describe '#init_channel' do
     let(:routing_key1) { 'routing_key1' }
     let(:routing_key2) { 'routing_key2' }
@@ -40,22 +46,23 @@ RSpec.describe Hopper do
 
     it 'sets the verify_peer option (default options)' do
       described_class.init_channel(config)
-      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: false, logger: Rails.logger)
+      expect(Bunny).to have_received(:new).with(config[:url], hash_including(verify_peer: false))
     end
 
     it 'sets the verify_peer option' do
       config[:verify_peer] = true
       described_class.init_channel(config)
-      expect(Bunny).to have_received(:new).with(config[:url], verify_peer: true, logger: Rails.logger)
+      expect(Bunny).to have_received(:new).with(config[:url], hash_including(verify_peer: true))
     end
 
     it 'binds queue to registered routing keys' do
+      described_class.init_channel(config)
       described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
 
-      described_class.init_channel(config)
+      exchange = described_class.listening_channel.topic(Hopper::Configuration.exchange, durable: true)
 
-      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key1)
-      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key2)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key1)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key2)
     end
 
     it 'does not initialize channel twice' do
@@ -89,11 +96,11 @@ RSpec.describe Hopper do
     end
 
     it 'setups new configured channel' do
-      expect(connection.find_queue(queue_name)).not_to be_nil
+      expect(described_class.listening_channel.connection.find_queue(queue_name)).not_to be_nil
     end
 
     it 'setups new configured exchange' do
-      expect(connection.find_exchange(exchange_name)).not_to be_nil
+      expect(described_class.listening_channel.connection.find_exchange(exchange_name)).not_to be_nil
     end
 
     it 'initializes hopper configuration' do
@@ -106,7 +113,7 @@ RSpec.describe Hopper do
     let(:bunny_server) { BunnyMock.new }
     let(:connection) { bunny_server.start }
     let(:channel) { connection.create_channel }
-    let(:exchange) { channel.topic('test') }
+    let(:exchange) { channel.topic(exchange_name) }
     let(:message) { 'Hello' }
     let(:message_key) { 'message_key' }
     let(:message_id) { SecureRandom.uuid }
@@ -129,7 +136,7 @@ RSpec.describe Hopper do
 
         described_class.init_channel(config)
 
-        expect(channel).to have_received(:on_uncaught_exception).with(no_args) do |*_args, &block|
+        expect(described_class.listening_channel).to have_received(:on_uncaught_exception).with(no_args) do |*_args, &block|
           expect(handler).to be(block)
         end
       end
@@ -215,6 +222,22 @@ RSpec.describe Hopper do
         allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
         described_class.publish(message, message_key)
         expect(Hopper::PublishRetryJob).to have_been_enqueued
+      end
+
+      it 'will re-queue message if channel does not confirm publish' do
+        allow(described_class.channel).to receive(:wait_for_confirms).and_return(false)
+        described_class.publish(message, message_key)
+        expect(Hopper::PublishRetryJob).to have_been_enqueued
+      end
+
+      it 'creates new channel when thread channel is closed' do
+        allow(channel).to receive(:closed?).and_return(true, false)
+        allow(connection).to receive(:create_channel).and_return(channel)
+
+        described_class.publish(message, message_key)
+
+        # 2 times in setup + 1 for closed channel
+        expect(connection).to have_received(:create_channel).at_least(3).times
       end
     end
   end
