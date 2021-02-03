@@ -184,3 +184,6 @@ Style/SingleArgumentDig:
 
 Style/StringConcatenation:
   Enabled: true
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
