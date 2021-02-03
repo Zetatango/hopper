@@ -96,11 +96,8 @@ GEM
     bunny-mock (1.7.0)
       bunny (>= 1.7)
     byebug (11.1.3)
-    codecov (0.2.5)
-      colorize
-      json
-      simplecov
-    colorize (0.8.1)
+    codecov (0.4.2)
+      simplecov (>= 0.15, < 0.22)
     concurrent-ruby (1.1.8)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
@@ -122,7 +119,6 @@ GEM
       concurrent-ruby (~> 1.0)
     jose (1.1.3)
       hamster
-    json (2.3.1)
     json-jwt (1.13.0)
       activesupport (>= 4.2)
       aes_key_wrap
