@@ -13,7 +13,6 @@ module Hopper
   # rubocop:enable Lint/StructNewOverride
 
   class HopperError < StandardError; end
-
   class ApiException < HopperError; end
   class InvalidMessageError < HopperError; end
   class HopperRetriableError < HopperError; end
@@ -117,10 +116,10 @@ module Hopper
     def listening_channel
       @listening_channel ||=
         begin
-         ch = create_connection.create_channel
-         ch.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
-         ch
-       end
+          ch = create_connection.create_channel
+          ch.on_uncaught_exception(&Hopper::Configuration.uncaught_exception_handler) if Hopper::Configuration.uncaught_exception_handler.present?
+          ch
+        end
     end
 
     def queue
