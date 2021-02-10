@@ -13,13 +13,9 @@ module Hopper
   # rubocop:enable Lint/StructNewOverride
 
   class HopperError < StandardError; end
-
   class ApiException < HopperError; end
-
   class InvalidMessageError < HopperError; end
-
   class HopperRetriableError < HopperError; end
-
   class HopperNonRetriableError < HopperError; end
 
   class HopperInitializationError < HopperError
