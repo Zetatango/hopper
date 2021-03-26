@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 27c6c583f9ebcaa3b8fb921c6f47f943e21a8ad9
+  revision: a9241244b2984f7367cbaea585d7a00210d5eb75
   specs:
     token_validator (0.6.3)
       jose
@@ -135,9 +135,10 @@ GEM
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2021.0225)
-    mimemagic (0.3.7)
-      nokogiri (~> 1.11.2)
-    mini_mime (1.0.2)
+    mimemagic (0.3.9)
+      nokogiri (~> 1)
+      rake
+    mini_mime (1.0.3)
     mini_portile2 (2.5.0)
     minitest (5.14.4)
     netrc (0.11.0)
