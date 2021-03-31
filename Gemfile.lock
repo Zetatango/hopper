@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 27c6c583f9ebcaa3b8fb921c6f47f943e21a8ad9
+  revision: 9619f162c63cd47fdb610b181b25da4ed6dcf6bc
   specs:
     token_validator (0.6.3)
       jose
@@ -250,7 +250,7 @@ GEM
       unf_ext
     unf_ext (0.0.7.7)
     unicode-display_width (2.0.0)
-    webmock (3.12.1)
+    webmock (3.12.2)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
