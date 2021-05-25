@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 8b41cdeeaa4ab9bee3ef2342d45ed98dcf793b64
+  revision: 35796210dbab7c029eb2c8d5fbeca0503d122b26
   specs:
     token_validator (0.6.3)
       jose
@@ -86,7 +86,7 @@ GEM
     aes_key_wrap (1.1.0)
     amq-protocol (2.3.2)
     ast (2.4.2)
-    bindata (2.4.9)
+    bindata (2.4.10)
     builder (3.2.4)
     bundler-audit (0.8.0)
       bundler (>= 1.2.0, < 3)
@@ -139,7 +139,7 @@ GEM
     minitest (5.14.4)
     netrc (0.11.0)
     nio4r (2.5.7)
-    nokogiri (1.11.4)
+    nokogiri (1.11.5)
       mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
     parallel (1.20.1)
@@ -250,11 +250,11 @@ GEM
       unf_ext
     unf_ext (0.0.7.7)
     unicode-display_width (2.0.0)
-    webmock (3.12.2)
+    webmock (3.13.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
-    websocket-driver (0.7.3)
+    websocket-driver (0.7.4)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     zeitwerk (2.4.2)
