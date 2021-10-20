@@ -7,11 +7,9 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
   reviewers:
-  - michellefoy
-  - nareshchinniTC
+  - weiyunlu
   assignees:
-  - michellefoy
-  - nareshchinniTC
+  - weiyunlu
   ignore:
   - dependency-name: rubocop
     versions:
