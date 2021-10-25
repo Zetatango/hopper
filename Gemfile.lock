@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: debe1669cdc41dafa85f9a2f46a6a6e85caecb80
+  revision: 7fa0243d617e80366dc14c60fdf565ba1baf9377
   specs:
     token_validator (0.6.3)
       jose
