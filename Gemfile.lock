@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 76439abf134529ba30deb621b1acdaec36e62321
+  revision: 0eabb981a1ff18762a73e564334a388938141272
   specs:
     token_validator (0.6.3)
       jose
@@ -132,16 +132,16 @@ GEM
       aes_key_wrap
       bindata
     jwt (2.3.0)
-    loofah (2.17.0)
+    loofah (2.18.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     mail (2.7.1)
       mini_mime (>= 0.1.1)
     marcel (1.0.2)
     method_source (1.0.0)
-    mime-types (3.3.1)
+    mime-types (3.4.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2021.0901)
+    mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
     minitest (5.15.0)
@@ -167,7 +167,7 @@ GEM
     parallel (1.22.1)
     parser (3.1.2.0)
       ast (~> 2.4.1)
-    public_suffix (4.0.6)
+    public_suffix (4.0.7)
     racc (1.6.0)
     rack (2.2.3)
     rack-test (1.1.0)
@@ -261,7 +261,7 @@ GEM
     sorted_set (1.0.3)
       rbtree
       set (~> 1.0)
-    strscan (3.0.2)
+    strscan (3.0.3)
     thor (1.2.1)
     timecop (0.9.5)
     timeout (0.2.0)
@@ -269,7 +269,7 @@ GEM
       concurrent-ruby (~> 1.0)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.8)
+    unf_ext (0.0.8.1)
     unicode-display_width (2.1.0)
     webmock (3.14.0)
       addressable (>= 2.8.0)
