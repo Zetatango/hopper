@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: a05e3676f88670db87841b8e0d294294a2cf89fb
+  revision: d4fa5b681faaa6e9983515ed3e7aae10bc15592b
   specs:
     token_validator (0.6.3)
       jose
@@ -121,7 +121,7 @@ GEM
       concurrent-ruby (~> 1.0)
     hashdiff (1.0.1)
     http-accept (1.7.0)
-    http-cookie (1.0.4)
+    http-cookie (1.0.5)
       domain_name (~> 0.5)
     i18n (1.10.0)
       concurrent-ruby (~> 1.0)
@@ -264,12 +264,12 @@ GEM
     strscan (3.0.3)
     thor (1.2.1)
     timecop (0.9.5)
-    timeout (0.2.0)
+    timeout (0.3.0)
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.8.1)
+    unf_ext (0.0.8.2)
     unicode-display_width (2.1.0)
     webmock (3.14.0)
       addressable (>= 2.8.0)
