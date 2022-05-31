@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: d4fa5b681faaa6e9983515ed3e7aae10bc15592b
+  revision: c841481c230235751daf278cd3db0ab2766cc14c
   specs:
     token_validator (0.6.3)
       jose
@@ -169,7 +169,7 @@ GEM
       ast (~> 2.4.1)
     public_suffix (4.0.7)
     racc (1.6.0)
-    rack (2.2.3)
+    rack (2.2.3.1)
     rack-test (1.1.0)
       rack (>= 1.0, < 3)
     rails (7.0.3)
