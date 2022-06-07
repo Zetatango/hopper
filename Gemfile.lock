@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: c841481c230235751daf278cd3db0ab2766cc14c
+  revision: ab055e12b43bf79679b875f1fbcc5743864351d6
   specs:
     token_validator (0.6.3)
       jose
@@ -131,7 +131,7 @@ GEM
       activesupport (>= 4.2)
       aes_key_wrap
       bindata
-    jwt (2.3.0)
+    jwt (2.4.0)
     loofah (2.18.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
