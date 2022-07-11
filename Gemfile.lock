@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 9a8363bb6cd146e37945559a5be969f2c9252bcb
+  revision: 38c2a99273d85724654437c9a11230e00b1cbc6d
   specs:
     token_validator (0.6.3)
       jose
@@ -123,12 +123,12 @@ GEM
     http-accept (1.7.0)
     http-cookie (1.0.5)
       domain_name (~> 0.5)
-    i18n (1.10.0)
+    i18n (1.11.0)
       concurrent-ruby (~> 1.0)
     jose (1.1.3)
       hamster
     json (2.6.2)
-    json-jwt (1.13.0)
+    json-jwt (1.14.0)
       activesupport (>= 4.2)
       aes_key_wrap
       bindata
