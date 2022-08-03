@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: fee2cb328aba9f271bf6cc00f506c18a9947dc4e
+  revision: 35cd9081b07c45cdb7409e403ed513b083048d7f
   specs:
     token_validator (0.6.3)
       jose
@@ -114,7 +114,7 @@ GEM
     docile (1.4.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    erubi (1.10.0)
+    erubi (1.11.0)
     globalid (1.0.0)
       activesupport (>= 5.0)
     hamster (3.0.0)
@@ -162,7 +162,7 @@ GEM
       timeout
     netrc (0.11.0)
     nio4r (2.5.8)
-    nokogiri (1.13.7)
+    nokogiri (1.13.8)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     parallel (1.22.1)
@@ -263,17 +263,17 @@ GEM
     sorted_set (1.0.3)
       rbtree
       set (~> 1.0)
-    strscan (3.0.3)
+    strscan (3.0.4)
     thor (1.2.1)
     timecop (0.9.5)
     timeout (0.3.0)
-    tzinfo (2.0.4)
+    tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.8.2)
     unicode-display_width (2.2.0)
-    webmock (3.14.0)
+    webmock (3.16.0)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
