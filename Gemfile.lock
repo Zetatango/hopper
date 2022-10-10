@@ -246,7 +246,7 @@ GEM
       rubocop-ast (>= 0.4.0)
     rubocop-rspec (2.13.2)
       rubocop (~> 1.33)
-    rubocop_runner (2.2.0)
+    rubocop_runner (2.2.1)
     ruby-progressbar (1.11.0)
     set (1.0.1)
     simplecov (0.21.2)
