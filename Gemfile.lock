@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 10a22ecbaa782a2e8ff53caae5f2192daf92aba1
+  revision: 675c5a7493658409359c6331a4eda798a6f32463
   specs:
     token_validator (0.6.3)
       jose
@@ -143,8 +143,11 @@ GEM
     loofah (2.19.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    mail (2.7.1)
+    mail (2.8.0)
       mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
     marcel (1.0.2)
     method_source (1.0.0)
     mime-types (3.4.1)
@@ -170,7 +173,7 @@ GEM
     parser (3.1.2.1)
       ast (~> 2.4.1)
     public_suffix (5.0.0)
-    racc (1.6.0)
+    racc (1.6.1)
     rack (2.2.4)
     rack-test (2.0.2)
       rack (>= 1.3)
