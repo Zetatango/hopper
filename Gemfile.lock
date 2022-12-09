@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 675c5a7493658409359c6331a4eda798a6f32463
+  revision: 585848cc3611ee994977724b1b1ac523db233ae9
   specs:
     token_validator (0.6.3)
       jose
@@ -109,6 +109,7 @@ GEM
     crack (0.4.5)
       rexml
     crass (1.0.6)
+    date (3.3.0)
     diff-lcs (1.3)
     docile (1.4.0)
     domain_name (0.5.20190701)
@@ -156,11 +157,12 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
     minitest (5.16.3)
-    net-imap (0.3.1)
+    net-imap (0.3.2)
+      date
       net-protocol
     net-pop (0.1.2)
       net-protocol
-    net-protocol (0.1.3)
+    net-protocol (0.2.1)
       timeout
     net-smtp (0.3.3)
       net-protocol
@@ -172,7 +174,7 @@ GEM
     parallel (1.22.1)
     parser (3.1.2.1)
       ast (~> 2.4.1)
-    public_suffix (5.0.0)
+    public_suffix (5.0.1)
     racc (1.6.1)
     rack (2.2.4)
     rack-test (2.0.2)
@@ -270,7 +272,7 @@ GEM
       set (~> 1.0)
     thor (1.2.1)
     timecop (0.9.6)
-    timeout (0.3.0)
+    timeout (0.3.1)
     tzinfo (2.0.5)
       concurrent-ruby (~> 1.0)
     unf (0.1.4)
