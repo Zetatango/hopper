@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 585848cc3611ee994977724b1b1ac523db233ae9
+  revision: 0517b382a136f82bd1c3b743d4feaff6b4b71761
   specs:
     token_validator (0.6.3)
       jose
@@ -109,7 +109,7 @@ GEM
     crack (0.4.5)
       rexml
     crass (1.0.6)
-    date (3.3.0)
+    date (3.3.1)
     diff-lcs (1.3)
     docile (1.4.0)
     domain_name (0.5.20190701)
