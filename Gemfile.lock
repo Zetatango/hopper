@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: a219a3efbfd94d4b02f46a2675466f9267dc4d98
+  revision: 83a0428b390f78077a3a7e2336e0c86b708f787f
   specs:
     token_validator (0.6.3)
       jose
@@ -157,7 +157,7 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.8.0)
     minitest (5.16.3)
-    net-imap (0.3.2)
+    net-imap (0.3.3)
       date
       net-protocol
     net-pop (0.1.2)
