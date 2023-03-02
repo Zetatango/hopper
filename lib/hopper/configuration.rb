@@ -26,5 +26,5 @@ class Hopper::Configuration
     def respond_to_missing?(method, _include_private = false)
       @configuration.key?(method.to_sym)
     end
-      end
+  end
 end
