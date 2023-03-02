@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: d11447b7504e88c6227eb7660c8f53dce7c79df0
+  revision: 02247b6a850910b91419e44a10ea271a05e9fa88
   specs:
     token_validator (0.6.3)
       jose
@@ -92,7 +92,7 @@ GEM
     aes_key_wrap (1.1.0)
     amq-protocol (2.3.2)
     ast (2.4.2)
-    bindata (2.4.14)
+    bindata (2.4.15)
     builder (3.2.4)
     bundler-audit (0.9.1)
       bundler (>= 1.2.0, < 3)
@@ -140,11 +140,11 @@ GEM
       bindata
       faraday (~> 2.0)
       faraday-follow_redirects
-    jwt (2.6.0)
+    jwt (2.7.0)
     loofah (2.19.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    mail (2.8.0.1)
+    mail (2.8.1)
       mini_mime (>= 0.1.1)
       net-imap
       net-pop
@@ -168,7 +168,7 @@ GEM
       net-protocol
     netrc (0.11.0)
     nio4r (2.5.8)
-    nokogiri (1.14.0)
+    nokogiri (1.14.2)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     parallel (1.22.1)
@@ -275,8 +275,8 @@ GEM
       set (~> 1.0)
     thor (1.2.1)
     timecop (0.9.6)
-    timeout (0.3.1)
-    tzinfo (2.0.5)
+    timeout (0.3.2)
+    tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unf (0.1.4)
       unf_ext
@@ -289,7 +289,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    zeitwerk (2.6.6)
+    zeitwerk (2.6.7)
 
 PLATFORMS
   ruby
