@@ -1,9 +1,8 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 0f40647d37e128ee0d8d5435288c83e44317fce9
+  revision: 690694c6e56454bcfc453efe283d3758bfc049eb
   specs:
     token_validator (0.6.3)
-      jose
       json-jwt
       jwt
       rack
@@ -87,7 +86,7 @@ GEM
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
-    addressable (2.8.4)
+    addressable (2.8.5)
       public_suffix (>= 2.0.2, < 6.0)
     aes_key_wrap (1.1.0)
     amq-protocol (2.3.2)
@@ -116,7 +115,8 @@ GEM
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     erubi (1.12.0)
-    faraday (2.7.6)
+    faraday (2.7.11)
+      base64
       faraday-net_http (>= 2.0, < 3.1)
       ruby2_keywords (>= 0.0.4)
     faraday-follow_redirects (0.3.0)
@@ -124,16 +124,12 @@ GEM
     faraday-net_http (3.0.2)
     globalid (1.2.1)
       activesupport (>= 6.1)
-    hamster (3.0.0)
-      concurrent-ruby (~> 1.0)
     hashdiff (1.0.1)
     http-accept (1.7.0)
     http-cookie (1.0.5)
       domain_name (~> 0.5)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
-    jose (1.1.3)
-      hamster
     json (2.6.3)
     json-jwt (1.16.3)
       activesupport (>= 4.2)
@@ -153,9 +149,9 @@ GEM
       net-smtp
     marcel (1.0.2)
     method_source (1.0.0)
-    mime-types (3.4.1)
+    mime-types (3.5.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2023.0218.1)
+    mime-types-data (3.2023.0808)
     mini_mime (1.1.5)
     mini_portile2 (2.8.4)
     minitest (5.20.0)
@@ -166,7 +162,7 @@ GEM
       net-protocol
     net-protocol (0.2.1)
       timeout
-    net-smtp (0.3.3)
+    net-smtp (0.4.0)
       net-protocol
     netrc (0.11.0)
     nio4r (2.5.9)
@@ -177,7 +173,7 @@ GEM
     parser (3.2.2.3)
       ast (~> 2.4.1)
       racc
-    public_suffix (5.0.1)
+    public_suffix (5.0.3)
     racc (1.7.1)
     rack (2.2.8)
     rack-test (2.1.0)
@@ -292,7 +288,7 @@ GEM
       unf_ext
     unf_ext (0.0.8.2)
     unicode-display_width (2.4.2)
-    webmock (3.18.1)
+    webmock (3.19.1)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
