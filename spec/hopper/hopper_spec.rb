@@ -5,4 +5,3 @@ RSpec.describe Hopper do
     expect(described_class::VERSION).not_to be nil
   end
 end
-# rubocop:enable RSpec/FilePath

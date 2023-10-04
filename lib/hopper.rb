@@ -84,7 +84,7 @@ module Hopper
     def subscribe(subscriber, method, routing_keys, opts = {})
       routing_keys.each do |routing_key|
         registration = RegistrationStruct.new(subscriber, method, routing_key, opts)
-        queue.bind(exchange(listening_channel), routing_key: routing_key)
+        queue.bind(exchange(listening_channel), routing_key:)
         registrations << registration
       end
     end
