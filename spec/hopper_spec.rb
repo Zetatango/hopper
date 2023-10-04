@@ -210,7 +210,7 @@ RSpec.describe Hopper do
       it 'will publish the message on the channel' do
         allow(SecureRandom).to receive(:uuid).and_return(message_id)
         described_class.publish(message, message_key)
-        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true, message_id: message_id)
+        expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true, message_id:)
       end
 
       it 'will not trigger the retry job if the publish succeeds' do
@@ -289,7 +289,7 @@ RSpec.describe Hopper do
     it 'will bound queue to exchange using the routing key' do
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key: routing_key)
+      expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key:)
     end
 
     it 'will call subscribers class methods if the topic matches' do

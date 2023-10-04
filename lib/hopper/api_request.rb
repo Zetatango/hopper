@@ -6,10 +6,10 @@ require 'token_validator'
 class Hopper::ApiRequest
   def execute(method, path, payload = nil)
     RestClient::Request.execute(
-      method: method,
+      method:,
       url: path,
       headers: { Authorization: "Bearer #{access_token}" },
-      payload: payload
+      payload:
     ) do |response, _request, result|
       raise Hopper::ApiException, "Error response from api #{method}:#{path}: #{result}" unless result.code == '200'
 
