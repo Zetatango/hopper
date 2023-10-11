@@ -34,19 +34,13 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 This application requires:
 
-*   Ruby version: 2.7.2
-
-Ruby 2.7.2 and greater requires OpenSSL 1.1+. To link to Homebrew's upgraded version of OpenSSL, add the following to your bash profile
-
-```shell script
-export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
-```
+*   Ruby version: 3.2.2
 
 If you do not have Ruby installed, it is recommended you use ruby-install and chruby to manage Ruby versions.
 
 ```bash
 brew install ruby-install chruby
-ruby-install ruby 2.7.2
+ruby-install ruby 3.2.2
 ```
 
 Add the following lines to ~/.bash_profile:
