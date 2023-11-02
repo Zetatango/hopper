@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: f9fd321a67055cad0b715dd24451f782a56132a0
+  revision: ad2b0ba98a54e77600af59f7d7dca245a6b60d63
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -171,7 +171,7 @@ GEM
     mini_portile2 (2.8.5)
     minitest (5.20.0)
     mutex_m (0.1.2)
-    net-imap (0.4.2)
+    net-imap (0.4.3)
       date
       net-protocol
     net-pop (0.1.2)
@@ -192,7 +192,7 @@ GEM
     psych (5.1.1.1)
       stringio
     public_suffix (5.0.3)
-    racc (1.7.1)
+    racc (1.7.2)
     rack (3.0.8)
     rack-session (2.0.0)
       rack (>= 3.0.0)
@@ -231,7 +231,7 @@ GEM
       thor (~> 1.0, >= 1.2.2)
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
-    rake (13.0.6)
+    rake (13.1.0)
     rbtree (0.4.6)
     rdoc (6.5.0)
       psych (>= 4.0.0)
