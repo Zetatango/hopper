@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: ad2b0ba98a54e77600af59f7d7dca245a6b60d63
+  revision: df2927cb7ac77c9be38efc19a3b142dbb99d0cfd
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -123,8 +123,7 @@ GEM
     date (3.3.4)
     diff-lcs (1.5.0)
     docile (1.4.0)
-    domain_name (0.5.20190701)
-      unf (>= 0.0.5, < 1.0.0)
+    domain_name (0.6.20231109)
     drb (2.2.0)
       ruby2_keywords
     erubi (1.12.0)
@@ -156,7 +155,7 @@ GEM
       faraday-follow_redirects
     jwt (2.7.1)
     language_server-protocol (3.17.0.3)
-    loofah (2.21.4)
+    loofah (2.22.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     mail (2.8.1)
@@ -172,7 +171,7 @@ GEM
     mini_portile2 (2.8.5)
     minitest (5.20.0)
     mutex_m (0.2.0)
-    net-imap (0.4.4)
+    net-imap (0.4.5)
       date
       net-protocol
     net-pop (0.1.2)
@@ -313,9 +312,6 @@ GEM
     timeout (0.4.1)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    unf (0.1.4)
-      unf_ext
-    unf_ext (0.0.8.2)
     unicode-display_width (2.5.0)
     webmock (3.19.1)
       addressable (>= 2.8.0)
