@@ -146,7 +146,7 @@ GEM
     irb (1.10.1)
       rdoc
       reline (>= 0.3.8)
-    json (2.7.0)
+    json (2.7.1)
     json-jwt (1.16.3)
       activesupport (>= 4.2)
       aes_key_wrap
@@ -235,7 +235,7 @@ GEM
     rbtree (0.4.6)
     rdoc (6.6.1)
       psych (>= 4.0.0)
-    regexp_parser (2.8.2)
+    regexp_parser (2.8.3)
     reline (0.4.1)
       io-console (~> 0.5)
     rest-client (2.1.0)
@@ -269,7 +269,7 @@ GEM
     rspec-support (3.12.1)
     rspec_junit_formatter (0.6.0)
       rspec-core (>= 2, < 4, != 2.12.0)
-    rubocop (1.58.0)
+    rubocop (1.59.0)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
