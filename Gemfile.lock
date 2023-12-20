@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 4c879091cbf330c54f607a151f94257abb173586
+  revision: 4667e04e5c65972b9426d86b9920d7b3235f63b3
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -101,7 +101,7 @@ GEM
     amq-protocol (2.3.2)
     ast (2.4.2)
     base64 (0.2.0)
-    bigdecimal (3.1.4)
+    bigdecimal (3.1.5)
     bindata (2.4.15)
     builder (3.2.4)
     bundler-audit (0.9.1)
@@ -142,7 +142,7 @@ GEM
       domain_name (~> 0.5)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
-    io-console (0.6.0)
+    io-console (0.7.0)
     irb (1.10.1)
       rdoc
       reline (>= 0.3.8)
@@ -171,7 +171,7 @@ GEM
     mini_portile2 (2.8.5)
     minitest (5.20.0)
     mutex_m (0.2.0)
-    net-imap (0.4.7)
+    net-imap (0.4.8)
       date
       net-protocol
     net-pop (0.1.2)
