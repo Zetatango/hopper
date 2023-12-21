@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 4667e04e5c65972b9426d86b9920d7b3235f63b3
+  revision: c1605acef853c636c224ea7ec56576754ba31639
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -127,7 +127,7 @@ GEM
     drb (2.2.0)
       ruby2_keywords
     erubi (1.12.0)
-    faraday (2.7.12)
+    faraday (2.8.0)
       base64
       faraday-net_http (>= 2.0, < 3.1)
       ruby2_keywords (>= 0.0.4)
@@ -136,14 +136,14 @@ GEM
     faraday-net_http (3.0.2)
     globalid (1.2.1)
       activesupport (>= 6.1)
-    hashdiff (1.0.1)
+    hashdiff (1.1.0)
     http-accept (1.7.0)
     http-cookie (1.0.5)
       domain_name (~> 0.5)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
-    io-console (0.7.0)
-    irb (1.10.1)
+    io-console (0.7.1)
+    irb (1.11.0)
       rdoc
       reline (>= 0.3.8)
     json (2.7.1)
@@ -189,7 +189,7 @@ GEM
     parser (3.2.2.4)
       ast (~> 2.4.1)
       racc
-    psych (5.1.1.1)
+    psych (5.1.2)
       stringio
     public_suffix (5.0.4)
     racc (1.7.3)
@@ -233,7 +233,7 @@ GEM
     rainbow (3.1.1)
     rake (13.1.0)
     rbtree (0.4.6)
-    rdoc (6.6.1)
+    rdoc (6.6.2)
       psych (>= 4.0.0)
     regexp_parser (2.8.3)
     reline (0.4.1)
