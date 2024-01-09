@@ -143,12 +143,12 @@ RSpec.describe Hopper do
     end
 
     describe 'when not initialized' do
-      it 'will ignore events' do
+      it 'ignores events' do
         described_class.publish(message, message_key)
         expect(exchange).not_to have_received(:publish)
       end
 
-      it 'will log request' do
+      it 'logs request' do
         allow(Rails.logger).to receive(:info)
         described_class.publish(message, message_key)
         expect(Rails.logger).to have_received(:info).with("Event #{message_key} not published as Hopper was not initialized in this environment")
@@ -207,24 +207,24 @@ RSpec.describe Hopper do
         described_class.init_channel(config)
       end
 
-      it 'will publish the message on the channel' do
+      it 'publishes the message on the channel' do
         allow(SecureRandom).to receive(:uuid).and_return(message_id)
         described_class.publish(message, message_key)
         expect(exchange).to have_received(:publish).with(message, routing_key: message_key, mandatory: true, persistent: true, message_id:)
       end
 
-      it 'will not trigger the retry job if the publish succeeds' do
+      it 'does not trigger the retry job if the publish succeeds' do
         described_class.publish(message, message_key)
         expect(Hopper::PublishRetryJob).not_to have_been_enqueued
       end
 
-      it 'will trigger the retry job if the publish raises Bunny::ConnectionClosedError' do
+      it 'triggers the retry job if the publish raises Bunny::ConnectionClosedError' do
         allow(exchange).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
         described_class.publish(message, message_key)
         expect(Hopper::PublishRetryJob).to have_been_enqueued
       end
 
-      it 'will re-queue message if channel does not confirm publish' do
+      it 're-queues message if channel does not confirm publish' do
         allow(described_class.channel).to receive(:wait_for_confirms).and_return(false)
         described_class.publish(message, message_key)
         expect(Hopper::PublishRetryJob).to have_been_enqueued
@@ -286,13 +286,13 @@ RSpec.describe Hopper do
       described_class.start_listening
     end
 
-    it 'will bound queue to exchange using the routing key' do
+    it 'bounds queue to exchange using the routing key' do
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
       expect(described_class.queue).to be_bound_to(described_class.exchange, routing_key:)
     end
 
-    it 'will call subscribers class methods if the topic matches' do
+    it 'calls subscribers class methods if the topic matches' do
       allow(class_subscriber).to receive(:handle_object_created)
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
@@ -302,7 +302,7 @@ RSpec.describe Hopper do
       expect(described_class.queue.message_count).to be_zero
     end
 
-    it 'will call subscribers instance methods if the topic matches' do
+    it 'calls subscribers instance methods if the topic matches' do
       allow(instance_subscriber).to receive(:handle_object_created)
       described_class.subscribe(instance_subscriber, :handle_object_created, [routing_key])
 
@@ -312,7 +312,7 @@ RSpec.describe Hopper do
       expect(described_class.queue.message_count).to be_zero
     end
 
-    it 'will not call subscribers methods if the topic does not match' do
+    it 'does not call subscribers methods if the topic does not match' do
       allow(class_subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperNonRetriableError)
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
@@ -321,7 +321,7 @@ RSpec.describe Hopper do
       expect(described_class.queue.message_count).to be_zero
     end
 
-    it 'will re-queue message if handling fails with retriable error' do
+    it 're-queues message if handling fails with retriable error' do
       allow(class_subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperRetriableError)
       allow(class_subscriber).to receive(:handle_object_created).once
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])

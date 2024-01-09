@@ -30,24 +30,24 @@ RSpec.describe LazySource do
   end
 
   describe 'Lazy source' do
-    it 'will call source url to obtain the object' do
+    it 'calls source url to obtain the object' do
       stub_request(:get, source_url)
         .to_return(status: 200, body: object.to_json.to_s)
       expect(described_class.new(source_url)).to be_a(Hash)
     end
 
-    it 'will delegate respond_to? to target object' do
+    it 'delegates respond_to? to target object' do
       stub_request(:get, source_url)
         .to_return(status: 200, body: object.to_json.to_s)
       expect(described_class.new(source_url)).to respond_to(:keys)
     end
 
-    it 'will not initiate request if not evaluated' do
+    it 'does not initiate request if not evaluated' do
       _source = described_class.new(source_url)
       expect(WebMock).to have_requested(:get, source_url).times(0)
     end
 
-    it 'will raise an api exception if the response status is not 200' do
+    it 'raises an api exception if the response status is not 200' do
       stub_request(:get, source_url)
         .to_return(status: 404, body: {}.to_json.to_s)
       expect do
@@ -55,7 +55,7 @@ RSpec.describe LazySource do
       end.to raise_exception(Hopper::ApiException)
     end
 
-    it 'will raise an api exception if the http request fails' do
+    it 'raises an api exception if the http request fails' do
       stub_request(:get, source_url).to_timeout
       expect do
         described_class.new(source_url).keys
