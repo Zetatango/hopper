@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 5db254e6a840ee6935354c9b0a240dec5c83e099
+  revision: c718538814637c7fb72bdbad30ca2b756bb93c78
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -117,7 +117,7 @@ GEM
       simplecov (>= 0.15, < 0.22)
     concurrent-ruby (1.2.3)
     connection_pool (2.4.1)
-    crack (0.4.6)
+    crack (1.0.0)
       bigdecimal
       rexml
     crass (1.0.6)
