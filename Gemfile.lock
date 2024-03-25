@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 595e3e3bcae8f6489b2e14e77e22d8e299e20e75
+  revision: 268e0a4a58bb9c0d56b387936468127406286200
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -167,7 +167,7 @@ GEM
     marcel (1.0.4)
     mime-types (3.5.2)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2024.0206)
+    mime-types-data (3.2024.0305)
     mini_mime (1.1.5)
     mini_portile2 (2.8.5)
     minitest (5.22.3)
