@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 268e0a4a58bb9c0d56b387936468127406286200
+  revision: fecd5220897bc17f8d0283b216cd0d881bc138ea
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -184,7 +184,7 @@ GEM
     net-smtp (0.4.0.1)
       net-protocol
     netrc (0.11.0)
-    nio4r (2.7.0)
+    nio4r (2.7.1)
     nokogiri (1.16.3)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
@@ -196,7 +196,7 @@ GEM
       stringio
     public_suffix (5.0.4)
     racc (1.7.3)
-    rack (3.0.9.1)
+    rack (3.0.10)
     rack-session (2.0.0)
       rack (>= 3.0.0)
     rack-test (2.1.0)
@@ -236,10 +236,10 @@ GEM
     rainbow (3.1.1)
     rake (13.1.0)
     rbtree (0.4.6)
-    rdoc (6.6.2)
+    rdoc (6.6.3.1)
       psych (>= 4.0.0)
     regexp_parser (2.9.0)
-    reline (0.4.3)
+    reline (0.5.0)
       io-console (~> 0.5)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
