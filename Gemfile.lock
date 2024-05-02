@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zetatango/token_validator.git
-  revision: 0737c87129f981b3d716774178549950d1eaf6cf
+  revision: a0e832ce60d869567da68d2fb1e8006463c031cc
   specs:
     token_validator (0.6.3)
       json-jwt
@@ -142,8 +142,8 @@ GEM
     i18n (1.14.4)
       concurrent-ruby (~> 1.0)
     io-console (0.7.2)
-    irb (1.12.0)
-      rdoc
+    irb (1.13.0)
+      rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.7.2)
     json-jwt (1.16.6)
@@ -239,7 +239,7 @@ GEM
     rdoc (6.6.3.1)
       psych (>= 4.0.0)
     regexp_parser (2.9.0)
-    reline (0.5.1)
+    reline (0.5.4)
       io-console (~> 0.5)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
