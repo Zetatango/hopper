@@ -33,9 +33,9 @@ RSpec.describe Hopper::PublishRetryJob do
       allow(Hopper).to receive(:publish).and_raise(Bunny::ConnectionClosedError.new(Object.new))
       allow(described_class).to receive(:set).and_call_original
 
-      expect {
+      expect do
         described_class.perform_now(message, message_key)
-      }.to have_enqueued_job(described_class).with(message, message_key)
+      end.to have_enqueued_job(described_class).with(message, message_key)
     end
   end
 end
