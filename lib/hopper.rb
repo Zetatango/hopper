@@ -194,17 +194,15 @@ module Hopper
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
       @listening_channel.acknowledge(delivery_tag, false)
-
-    rescue
+    rescue StandardError
       # Catch any other type of exception during message handling
-      if requeue_poison_message?(delivery_tag, routing_key, message)
+      if requeue_poison_message?(routing_key, message)
         log(:info, "Caught unhandled exception while handling message with key #{routing_key}. Requeuing...")
         @listening_channel.reject(delivery_tag, true)
       else
         log(:error, "Caught unhandled exception while handling message with key #{routing_key}. Dropping!")
         @listening_channel.acknowledge(delivery_tag, false)
       end
-
     end
 
     def message_options(key)
@@ -252,10 +250,11 @@ module Hopper
       end
     end
 
-    def requeue_poison_message?(delivery_tag, routing_key, message)
-      return false if not redis.present?
+    def requeue_poison_message?(routing_key, message)
+      return false unless redis.present?
       return false if redis.connected? == false
       return false if message.nil?
+
       begin
         digest = Digest::SHA256.hexdigest(message.to_s)
         key = "rbmq-retry-cnt-#{routing_key}-#{digest}"
@@ -267,11 +266,11 @@ module Hopper
           return false
         end
         redis.set(key, retry_count, ex: 30)
-      rescue
+      rescue StandardError
         return false
       end
 
-      return true
+      true
     end
 
     def create_connection
