@@ -16,12 +16,12 @@ RSpec.describe Hopper::Configuration do
 
     it 'sets default verify_peer' do
       described_class.load({})
-      expect(described_class.verify_peer).to eq(false)
+      expect(described_class.verify_peer).to be(false)
     end
 
     it 'overrides default verify_peer' do
       described_class.load(verify_peer: true)
-      expect(described_class.verify_peer).to eq(true)
+      expect(described_class.verify_peer).to be(true)
     end
 
     it 'sets the default uncaught_exception_handler to nil by default' do

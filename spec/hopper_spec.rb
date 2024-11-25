@@ -25,8 +25,8 @@ RSpec.describe Hopper do
   end
 
   describe '#init_channel' do
-    let(:routing_key1) { 'routing_key1' }
-    let(:routing_key2) { 'routing_key2' }
+    let(:routing_key_a) { 'routing_key1' }
+    let(:routing_key_b) { 'routing_key2' }
     let(:connection) { BunnyMock.new }
 
     before do
@@ -57,12 +57,12 @@ RSpec.describe Hopper do
 
     it 'binds queue to registered routing keys' do
       described_class.init_channel(config)
-      described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
+      described_class.subscribe(Object.new, :dummy_method, [routing_key_a, routing_key_b])
 
       exchange = described_class.listening_channel.topic(Hopper::Configuration.exchange, durable: true)
 
-      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key1)
-      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key2)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key_a)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key_b)
     end
 
     it 'does not initialize channel twice' do
@@ -156,7 +156,7 @@ RSpec.describe Hopper do
     end
 
     describe 'when initializing' do
-      let(:semaphore) { instance_double('Mutex') }
+      let(:semaphore) { instance_double(Mutex) }
 
       before do
         allow(described_class).to receive(:semaphore).and_return(semaphore)
