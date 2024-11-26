@@ -26,6 +26,33 @@ require 'rspec/rails'
 
 Dir[File.join(Dir.pwd, 'lib', 'hopper.rb')].sort.each { |file| require file }
 
+class BugsnagMock
+  def notify(_exception)
+    puts "BugsnagMock:notify was called"
+  end
+end
+
+class RedisMock
+  def initialize
+    @data = {}
+  end
+  def get(key)
+    @data[key]
+  end
+  def set(key, value, _options = {})
+    @data[key] = value
+  end
+  def del(key)
+    @data.delete(key)
+  end
+  def connected?
+    true
+  end
+  def clear
+    @data = {}
+  end
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

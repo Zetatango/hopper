@@ -111,6 +111,10 @@ module Hopper
       @redis ||= Hopper::Configuration.configuration[:redis]
     end
 
+    def bugsnag_service
+      @bugsnag_service ||= Hopper::Configuration.configuration[:bugsnag]
+    end
+
     def connection
       thread_local_variable(:hopper_connection) do
         create_connection
@@ -194,12 +198,13 @@ module Hopper
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
       @listening_channel.acknowledge(delivery_tag, false)
-    rescue StandardError
+    rescue StandardError => e
       # Catch any other type of exception during message handling
       if requeue_poison_message?(routing_key, message)
         log(:info, "Caught unhandled exception while handling message with key #{routing_key}. Requeuing...")
         @listening_channel.nack(delivery_tag, false, true)
       else
+        bugsnag(e)
         log(:error, "Caught unhandled exception while handling message with key #{routing_key}. Dropping!")
         @listening_channel.reject(delivery_tag, false)
       end
@@ -236,6 +241,10 @@ module Hopper
 
     def initialized?
       @state == INITIALIZED
+    end
+
+    def bugsnag(exception)
+      bugsnag_service.notify(exception) if bugsnag_service.present?
     end
 
     def log(level, message)

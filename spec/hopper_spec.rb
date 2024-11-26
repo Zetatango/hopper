@@ -12,7 +12,9 @@ RSpec.describe Hopper do
       url: 'localhost:5672',
       exchange: exchange_name,
       queue: queue_name,
-      max_retries: 3
+      max_retries: 3,
+      redis: nil,
+      bugsnag: nil
     }
   end
 
@@ -282,16 +284,25 @@ RSpec.describe Hopper do
     end
 
     let(:redis_mock) do
-      instance_double(Redis, get: '0', set: nil, del: nil, connected?: true)
+      instance_double(RedisMock, get: '0', set: nil, del: nil, connected?: true)
+    end
+
+    let(:bugsnag_mock) do
+      instance_double(BugsnagMock, notify: nil)
     end
 
     # rubocop:disable RSpec/AnyInstance
     before do
-      allow(Redis).to receive(:instantiate).and_return(redis_mock)
-      config[:redis] = Redis.new
+      allow(RedisMock).to receive(:instantiate).and_return(redis_mock)
+      config[:redis] = RedisMock.new
+      allow_any_instance_of(RedisMock).to receive(:set).and_return(nil)
+      allow_any_instance_of(RedisMock).to receive(:del).and_return(nil)
+
+      allow(BugsnagMock).to receive(:instantiate).and_return(bugsnag_mock)
+      config[:bugsnag] = BugsnagMock.new
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_return(nil)
+
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
-      allow_any_instance_of(Redis).to receive(:set).and_return(nil)
-      allow_any_instance_of(Redis).to receive(:del).and_return(nil)
       described_class.clear
       described_class.init_channel(config)
       described_class.start_listening
@@ -350,7 +361,7 @@ RSpec.describe Hopper do
         rsp = reponse_values.shift
         rsp == :raise ? raise(StandardError) : rsp
       end
-      allow_any_instance_of(Redis).to receive(:get).and_return(1, 2)
+      allow_any_instance_of(RedisMock).to receive(:get).and_return(1, 2)
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
@@ -365,7 +376,8 @@ RSpec.describe Hopper do
     # rubocop:disable RSpec/AnyInstance
     it 'drops message if handling fails with uncaught exception too often' do
       allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
-      allow_any_instance_of(Redis).to receive(:get).and_return(1, 2, 3)
+      allow_any_instance_of(RedisMock).to receive(:get).and_return(1, 2, 3)
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_call_original
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
@@ -380,7 +392,8 @@ RSpec.describe Hopper do
     # rubocop:disable RSpec/AnyInstance
     it 'drop message if handling fails with uncaught exception and redis fails' do
       allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
-      allow_any_instance_of(Redis).to receive(:get).and_raise(StandardError)
+      allow_any_instance_of(RedisMock).to receive(:get).and_raise(StandardError)
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_call_original
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 

@@ -13,7 +13,8 @@ class Hopper::Configuration
       uncaught_exception_handler: nil,
       consumer_tag: nil,
       max_retries: 3,
-      redis: nil
+      redis: nil,
+      bugsnag: nil
     }.freeze
 
     def load(configuration)
