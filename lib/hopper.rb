@@ -259,6 +259,7 @@ module Hopper
         digest = Digest::SHA256.hexdigest(message.to_s)
         key = "rbmq-retry-cnt-#{routing_key}-#{digest}"
         retry_count = redis.get(key)
+        log(:info, "Redis key={key}, value=#{retry_count}")
         retry_count = 0 if retry_count.nil?
         retry_count = retry_count.to_i + 1
         if retry_count > Hopper::Configuration.configuration[:max_retries]
