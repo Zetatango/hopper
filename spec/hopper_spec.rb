@@ -285,14 +285,18 @@ RSpec.describe Hopper do
       instance_double(Redis, get: '0', set: nil, del: nil, connected?: true)
     end
 
+    # rubocop:disable RSpec/AnyInstance
     before do
       allow(Redis).to receive(:instantiate).and_return(redis_mock)
       config[:redis] = Redis.new
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
+      allow_any_instance_of(Redis).to receive(:set).and_return(nil)
+      allow_any_instance_of(Redis).to receive(:del).and_return(nil)
       described_class.clear
       described_class.init_channel(config)
       described_class.start_listening
     end
+    # rubocop:enable RSpec/AnyInstance
 
     it 'bounds queue to exchange using the routing key' do
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
