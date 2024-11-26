@@ -267,6 +267,7 @@ module Hopper
         end
         redis.set(key, retry_count, ex: 30)
       rescue StandardError
+        log(:error, "Unable to count the number of rbmq retries.")
         return false
       end
 

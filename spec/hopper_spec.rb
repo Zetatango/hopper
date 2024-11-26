@@ -358,7 +358,7 @@ RSpec.describe Hopper do
       expect(described_class.listening_channel.acknowledged_state[:acked].size).to eq(1)
     end
 
-    it 're-queues message if handling fails with uncaught exception too often' do
+    it 'drops message if handling fails with uncaught exception too often' do
       allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
       allow(redis_mock).to receive(:get).and_return(1, 2, 3)
 
@@ -368,6 +368,20 @@ RSpec.describe Hopper do
 
       expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(2)
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to be_zero
+    end
+
+    it 'drop message if handling fails with uncaught exception and redis fails' do
+      allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
+      allow(redis_mock).to receive(:get).and_raise(StandardError)
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
       expect(described_class.listening_channel.acknowledged_state[:acked].size).to be_zero
     end
