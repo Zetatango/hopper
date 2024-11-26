@@ -34,13 +34,13 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 This application requires:
 
-*   Ruby version: 3.2.2
+*   Ruby version: 3.2.2+
 
 If you do not have Ruby installed, it is recommended you use ruby-install and chruby to manage Ruby versions.
 
 ```bash
 brew install ruby-install chruby
-ruby-install ruby 3.2.2
+ruby-install ruby 3.2.5
 ```
 
 Add the following lines to ~/.bash_profile:
@@ -50,11 +50,11 @@ source /usr/local/opt/chruby/share/chruby/chruby.sh
 source /usr/local/opt/chruby/share/chruby/auto.sh
 ```
 
-Set Ruby version to 2.7.2:
+Set Ruby version to 3.2.5:
 
 ```bash
 source ~/.bash_profile
-chruby 2.7.2
+chruby 3.2.5
 ```
 
 ## Contributing

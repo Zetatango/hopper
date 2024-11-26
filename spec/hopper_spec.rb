@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'redis'
 
 RSpec.describe Hopper do
   let(:queue_name) { 'test_queue' }
@@ -10,7 +11,10 @@ RSpec.describe Hopper do
     {
       url: 'localhost:5672',
       exchange: exchange_name,
-      queue: queue_name
+      queue: queue_name,
+      max_retries: 3,
+      redis: nil,
+      bugsnag: nil
     }
   end
 
@@ -25,8 +29,8 @@ RSpec.describe Hopper do
   end
 
   describe '#init_channel' do
-    let(:routing_key1) { 'routing_key1' }
-    let(:routing_key2) { 'routing_key2' }
+    let(:routing_key_a) { 'routing_key1' }
+    let(:routing_key_b) { 'routing_key2' }
     let(:connection) { BunnyMock.new }
 
     before do
@@ -57,12 +61,12 @@ RSpec.describe Hopper do
 
     it 'binds queue to registered routing keys' do
       described_class.init_channel(config)
-      described_class.subscribe(Object.new, :dummy_method, [routing_key1, routing_key2])
+      described_class.subscribe(Object.new, :dummy_method, [routing_key_a, routing_key_b])
 
       exchange = described_class.listening_channel.topic(Hopper::Configuration.exchange, durable: true)
 
-      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key1)
-      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key2)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key_a)
+      expect(described_class.queue).to be_bound_to(exchange, routing_key: routing_key_b)
     end
 
     it 'does not initialize channel twice' do
@@ -156,7 +160,7 @@ RSpec.describe Hopper do
     end
 
     describe 'when initializing' do
-      let(:semaphore) { instance_double('Mutex') }
+      let(:semaphore) { instance_double(Mutex) }
 
       before do
         allow(described_class).to receive(:semaphore).and_return(semaphore)
@@ -279,12 +283,31 @@ RSpec.describe Hopper do
       instance_double(subscriber_class)
     end
 
+    let(:redis_mock) do
+      instance_double(RedisMock, get: '0', set: nil, del: nil, connected?: true)
+    end
+
+    let(:bugsnag_mock) do
+      instance_double(BugsnagMock, notify: nil)
+    end
+
+    # rubocop:disable RSpec/AnyInstance
     before do
+      allow(RedisMock).to receive(:instantiate).and_return(redis_mock)
+      config[:redis] = RedisMock.new
+      allow_any_instance_of(RedisMock).to receive(:set).and_return(nil)
+      allow_any_instance_of(RedisMock).to receive(:del).and_return(nil)
+
+      allow(BugsnagMock).to receive(:instantiate).and_return(bugsnag_mock)
+      config[:bugsnag] = BugsnagMock.new
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_return(nil)
+
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
       described_class.clear
       described_class.init_channel(config)
       described_class.start_listening
     end
+    # rubocop:enable RSpec/AnyInstance
 
     it 'bounds queue to exchange using the routing key' do
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
@@ -330,6 +353,57 @@ RSpec.describe Hopper do
 
       expect(described_class.queue.message_count).to be_zero
     end
+
+    # rubocop:disable RSpec/AnyInstance
+    it 're-queues message if handling fails with uncaught exception' do
+      reponse_values = [:raise, nil]
+      allow(class_subscriber).to receive(:handle_object_created).twice do
+        rsp = reponse_values.shift
+        rsp == :raise ? raise(StandardError) : rsp
+      end
+      allow_any_instance_of(RedisMock).to receive(:get).and_return(1, 2)
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to eq(1)
+    end
+    # rubocop:enable RSpec/AnyInstance
+
+    # rubocop:disable RSpec/AnyInstance
+    it 'drops message if handling fails with uncaught exception too often' do
+      allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
+      allow_any_instance_of(RedisMock).to receive(:get).and_return(1, 2, 3)
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_call_original
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(2)
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to be_zero
+    end
+    # rubocop:enable RSpec/AnyInstance
+
+    # rubocop:disable RSpec/AnyInstance
+    it 'drop message if handling fails with uncaught exception and redis fails' do
+      allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
+      allow_any_instance_of(RedisMock).to receive(:get).and_raise(StandardError)
+      allow_any_instance_of(BugsnagMock).to receive(:notify).and_call_original
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to be_zero
+    end
+    # rubocop:enable RSpec/AnyInstance
 
     describe 'will receive source data' do
       let(:source_path) { 'http://localhost:3000/objects/123' }

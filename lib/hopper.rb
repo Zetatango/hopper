@@ -107,6 +107,14 @@ module Hopper
       @semaphore ||= Mutex.new
     end
 
+    def redis
+      @redis ||= Hopper::Configuration.configuration[:redis]
+    end
+
+    def bugsnag_service
+      @bugsnag_service ||= Hopper::Configuration.configuration[:bugsnag]
+    end
+
     def connection
       thread_local_variable(:hopper_connection) do
         create_connection
@@ -190,6 +198,16 @@ module Hopper
       # this means the message should not be delivered again
       # maybe added to a different queue for manual processing?
       @listening_channel.acknowledge(delivery_tag, false)
+    rescue StandardError => e
+      # Catch any other type of exception during message handling
+      if requeue_poison_message?(routing_key, message)
+        log(:info, "Caught unhandled exception while handling message with key #{routing_key}. Requeuing...")
+        @listening_channel.nack(delivery_tag, false, true)
+      else
+        bugsnag(e)
+        log(:error, "Caught unhandled exception while handling message with key #{routing_key}. Dropping!")
+        @listening_channel.reject(delivery_tag, false)
+      end
     end
 
     def message_options(key)
@@ -225,6 +243,10 @@ module Hopper
       @state == INITIALIZED
     end
 
+    def bugsnag(exception)
+      bugsnag_service.notify(exception) if bugsnag_service.present?
+    end
+
     def log(level, message)
       Rails.logger.send(level, message) if Rails.logger.present?
     end
@@ -235,6 +257,30 @@ module Hopper
       Rails.logger.tagged(message_id) do
         yield block
       end
+    end
+
+    def requeue_poison_message?(routing_key, message)
+      return false unless redis.present?
+      return false if redis.connected? == false
+      return false if message.nil?
+
+      begin
+        digest = Digest::SHA256.hexdigest(message.to_s)
+        key = "rbmq-retry-cnt-#{routing_key}-#{digest}"
+        retry_count = redis.get(key)
+        log(:debug, "Redis key=#{key}, value=#{retry_count}")
+        retry_count = 0 if retry_count.nil?
+        retry_count = retry_count.to_i + 1
+        if retry_count > Hopper::Configuration.configuration[:max_retries]
+          redis.del(key)
+          return false
+        end
+        redis.set(key, retry_count, ex: 30)
+      rescue StandardError
+        log(:error, "Unable to count the number of rbmq retries.")
+        return false
+      end
+      true
     end
 
     def create_connection
@@ -257,9 +303,12 @@ module Hopper
 
     def thread_local_variable(var_name, &block)
       result = Thread.current[var_name]
+      thread_id = Thread.current.object_id
+      log(:info, "Accessing thread var \"#{var_name}\" from thread #{thread_id}, value= #{result}")
       unless result.present?
         result = yield block
         Thread.current[var_name] = result
+        log(:info, "Storing thread var \"#{var_name}\" from thread #{thread_id}, value <-- #{result}")
       end
 
       result

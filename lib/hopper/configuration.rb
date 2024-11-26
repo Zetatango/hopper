@@ -11,7 +11,10 @@ class Hopper::Configuration
       publish_retry_wait: 1.minute,
       verify_peer: false,
       uncaught_exception_handler: nil,
-      consumer_tag: nil
+      consumer_tag: nil,
+      max_retries: 3,
+      redis: nil,
+      bugsnag: nil
     }.freeze
 
     def load(configuration)
