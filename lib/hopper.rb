@@ -198,10 +198,10 @@ module Hopper
       # Catch any other type of exception during message handling
       if requeue_poison_message?(routing_key, message)
         log(:info, "Caught unhandled exception while handling message with key #{routing_key}. Requeuing...")
-        @listening_channel.reject(delivery_tag, true)
+        @listening_channel.nack(delivery_tag, false, true)
       else
         log(:error, "Caught unhandled exception while handling message with key #{routing_key}. Dropping!")
-        @listening_channel.acknowledge(delivery_tag, false)
+        @listening_channel.reject(delivery_tag, false)
       end
     end
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'redis'
 
 RSpec.describe Hopper do
   let(:queue_name) { 'test_queue' }
@@ -10,7 +11,8 @@ RSpec.describe Hopper do
     {
       url: 'localhost:5672',
       exchange: exchange_name,
-      queue: queue_name
+      queue: queue_name,
+      max_retries: 3
     }
   end
 
@@ -263,6 +265,10 @@ RSpec.describe Hopper do
 
     let(:routing_key) { 'object.created' }
 
+    let(:redis_mock) do
+      instance_double(Redis, get: '0', set: nil, del: nil, connected?: true)
+    end
+
     let(:class_subscriber) do
       Class.new do
         def self.handle_object_created(_event_type, _event, source)
@@ -280,6 +286,9 @@ RSpec.describe Hopper do
     end
 
     before do
+      allow(Redis).to receive(:new).and_return(redis_mock)
+      config[:redis] = Redis.new
+
       allow(Bunny).to receive(:new).and_return(BunnyMock.new)
       described_class.clear
       described_class.init_channel(config)
@@ -329,6 +338,38 @@ RSpec.describe Hopper do
       described_class.publish(retriable_error_message.to_json.to_s, routing_key)
 
       expect(described_class.queue.message_count).to be_zero
+    end
+
+    it 're-queues message if handling fails with uncaught exception' do
+      reponse_values = [:raise, nil]
+      allow(class_subscriber).to receive(:handle_object_created).twice do
+        rsp = reponse_values.shift
+        rsp == :raise ? raise(StandardError) : rsp
+      end
+      allow(redis_mock).to receive(:get).and_return(1, 2)
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to eq(1)
+    end
+
+    it 're-queues message if handling fails with uncaught exception too often' do
+      allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)
+      allow(redis_mock).to receive(:get).and_return(1, 2, 3)
+
+      described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
+
+      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+
+      expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
+      expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(2)
+      expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
+      expect(described_class.listening_channel.acknowledged_state[:acked].size).to be_zero
     end
 
     describe 'will receive source data' do
