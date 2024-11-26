@@ -339,7 +339,6 @@ RSpec.describe Hopper do
       expect(described_class.queue.message_count).to be_zero
     end
 
-    # rubocop:disable RSpec/ExampleLength
     it 're-queues message if handling fails with uncaught exception' do
       reponse_values = [:raise, nil]
       allow(class_subscriber).to receive(:handle_object_created).twice do
@@ -356,7 +355,6 @@ RSpec.describe Hopper do
       expect(described_class.listening_channel.acknowledged_state[:rejected].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:acked].size).to eq(1)
     end
-    # rubocop:enable RSpec/ExampleLength
 
     it 'drops message if handling fails with uncaught exception too often' do
       allow(class_subscriber).to receive(:handle_object_created).and_raise(StandardError)

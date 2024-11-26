@@ -15,7 +15,7 @@ AllCops:
       - _spec.rb
       - "(?:^|/)spec/"
     SpecTypes:
-      Feature: 'spec/features/**/*'
+      Feature: "spec/features/**/*"
 
 Style/Documentation:
   Enabled: false
@@ -45,7 +45,7 @@ RSpec/MultipleExpectations:
   Max: 5
 
 RSpec/ExampleLength:
-  Max: 10
+  Enabled: false
 
 RSpec/NestedGroups:
   Max: 4
