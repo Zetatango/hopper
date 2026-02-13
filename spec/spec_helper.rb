@@ -24,7 +24,7 @@ require 'hopper'
 require "action_controller/railtie"
 require 'rspec/rails'
 
-Dir[File.join(Dir.pwd, 'lib', 'hopper.rb')].sort.each { |file| require file }
+Dir[File.join(Dir.pwd, 'lib', 'hopper.rb')].each { |file| require file }
 
 class BugsnagMock
   def notify(_exception)

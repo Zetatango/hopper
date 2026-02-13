@@ -133,7 +133,7 @@ RSpec.describe Hopper do
 
     describe 'when uncaught_exception_handler is set' do
       it 'sets the uncaught_exception_handler' do
-        handler = proc { |_error, _component| nil }
+        handler = proc { |_error, _component| }
         config[:uncaught_exception_handler] = handler
 
         allow(channel).to receive(:on_uncaught_exception)
@@ -319,7 +319,7 @@ RSpec.describe Hopper do
       allow(class_subscriber).to receive(:handle_object_created)
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(message.to_json.to_s, routing_key)
+      described_class.publish(message.to_json, routing_key)
 
       expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
       expect(described_class.queue.message_count).to be_zero
@@ -329,7 +329,7 @@ RSpec.describe Hopper do
       allow(instance_subscriber).to receive(:handle_object_created)
       described_class.subscribe(instance_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(message.to_json.to_s, routing_key)
+      described_class.publish(message.to_json, routing_key)
 
       expect(instance_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
       expect(described_class.queue.message_count).to be_zero
@@ -339,7 +339,7 @@ RSpec.describe Hopper do
       allow(class_subscriber).to receive(:handle_object_created).once.and_raise(Hopper::HopperNonRetriableError)
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(non_retriable_error_message.to_json.to_s, routing_key)
+      described_class.publish(non_retriable_error_message.to_json, routing_key)
 
       expect(described_class.queue.message_count).to be_zero
     end
@@ -349,7 +349,7 @@ RSpec.describe Hopper do
       allow(class_subscriber).to receive(:handle_object_created).once
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      described_class.publish(retriable_error_message.to_json, routing_key)
 
       expect(described_class.queue.message_count).to be_zero
     end
@@ -365,7 +365,7 @@ RSpec.describe Hopper do
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      described_class.publish(retriable_error_message.to_json, routing_key)
       expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(1)
       expect(described_class.listening_channel.acknowledged_state[:rejected].size).to be_zero
@@ -381,7 +381,7 @@ RSpec.describe Hopper do
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      described_class.publish(retriable_error_message.to_json, routing_key)
       expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:nacked].size).to eq(2)
       expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
@@ -397,7 +397,7 @@ RSpec.describe Hopper do
 
       described_class.subscribe(class_subscriber, :handle_object_created, [routing_key])
 
-      described_class.publish(retriable_error_message.to_json.to_s, routing_key)
+      described_class.publish(retriable_error_message.to_json, routing_key)
       expect(described_class.listening_channel.acknowledged_state[:pending].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:nacked].size).to be_zero
       expect(described_class.listening_channel.acknowledged_state[:rejected].size).to eq(1)
@@ -441,28 +441,28 @@ RSpec.describe Hopper do
 
       it 'as nil if source is not provided' do
         allow(class_subscriber).to receive(:handle_object_created)
-        described_class.publish(message.to_json.to_s, routing_key)
+        described_class.publish(message.to_json, routing_key)
         expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message, nil)
       end
 
       it 'receives lazy source object and no calls are made if source is not evaluated' do
         allow(class_subscriber).to receive(:handle_object_created)
-        described_class.publish(message_with_data.to_json.to_s, routing_key)
+        described_class.publish(message_with_data.to_json, routing_key)
         expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message_with_data, any_args)
       end
 
       it 'receive real object if evaluated' do
         allow(class_subscriber).to receive(:handle_object_created) { |args| args }
         stub_request(:get, source_path)
-          .to_return(status: 200, body: object.to_json.to_s)
-        described_class.publish(message_with_data.to_json.to_s, routing_key)
+          .to_return(status: 200, body: object.to_json)
+        described_class.publish(message_with_data.to_json, routing_key)
         expect(class_subscriber).to have_received(:handle_object_created).with(routing_key, message_with_data, hash_including(id: 123))
       end
 
       it 're-queue the message if the get http request fails' do
         stub_request(:get, source_path).to_timeout.times(1).then
-                                       .to_return(status: 200, body: object.to_json.to_s)
-        described_class.publish(message_with_data.to_json.to_s, routing_key)
+                                       .to_return(status: 200, body: object.to_json)
+        described_class.publish(message_with_data.to_json, routing_key)
         expect(WebMock).to have_requested(:get, source_path).times(2)
       end
     end
