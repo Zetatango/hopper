@@ -2,7 +2,7 @@
 
 require 'hopper/api_request'
 
-class LazySource < ::BasicObject
+class LazySource < BasicObject
   def initialize(source)
     @__source__ = source
   end
@@ -14,8 +14,8 @@ class LazySource < ::BasicObject
 
   # rubocop disable is needed as the class is extending BasicObject (no respond_to_missing?, should not respond to super)
   # rubocop:disable Style/MissingRespondToMissing
-  def method_missing(method_name, *args, &block)
-    __target_object__.send(method_name, *args, &block)
+  def method_missing(method_name, *, &)
+    __target_object__.send(method_name, *, &)
   end
   # rubocop:enable Style/MissingRespondToMissing
 end

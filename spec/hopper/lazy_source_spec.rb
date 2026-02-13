@@ -25,20 +25,20 @@ RSpec.describe LazySource do
     stub_request(:post, "#{roadrunner_url}/oauth/token")
       .to_return(status: 200, body:
         '{"access_token":"abc123","token_type":"bearer",' \
-            '"expires_in":7200,"refresh_token":"",' \
-            '"scope":"idp:api"}')
+        '"expires_in":7200,"refresh_token":"",' \
+        '"scope":"idp:api"}')
   end
 
   describe 'Lazy source' do
     it 'calls source url to obtain the object' do
       stub_request(:get, source_url)
-        .to_return(status: 200, body: object.to_json.to_s)
+        .to_return(status: 200, body: object.to_json)
       expect(described_class.new(source_url)).to be_a(Hash)
     end
 
     it 'delegates respond_to? to target object' do
       stub_request(:get, source_url)
-        .to_return(status: 200, body: object.to_json.to_s)
+        .to_return(status: 200, body: object.to_json)
       expect(described_class.new(source_url)).to respond_to(:keys)
     end
 
@@ -49,7 +49,7 @@ RSpec.describe LazySource do
 
     it 'raises an api exception if the response status is not 200' do
       stub_request(:get, source_url)
-        .to_return(status: 404, body: {}.to_json.to_s)
+        .to_return(status: 404, body: {}.to_json)
       expect do
         described_class.new(source_url).keys
       end.to raise_exception(Hopper::ApiException)
