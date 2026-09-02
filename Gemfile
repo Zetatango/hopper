@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-ruby '>=3.2.2'
+ruby '>= 3.3.0'
 
 source "https://rubygems.org"
 
@@ -11,4 +11,4 @@ end
 
 gemspec
 
-gem 'token_validator', github: 'Zetatango/token_validator'
+gem 'token_validator', github: 'Zetatango/token_validator', tag: 'v0.7.0'
