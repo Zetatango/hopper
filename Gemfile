@@ -11,4 +11,4 @@ end
 
 gemspec
 
-gem 'token_validator', github: 'Zetatango/token_validator'
+gem 'token_validator', github: 'Zetatango/token_validator', tag: 'v0.7.0'
